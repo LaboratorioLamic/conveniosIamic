@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glosa | Gestão de Convênios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { navy: { 700: '#1e40af', 800: '#1e3a8a', 900: '#172554' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #172554; border-radius: 10px; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        @keyframes spinLoader { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-[#f8fafc] font-sans text-slate-800 h-screen flex flex-col overflow-hidden">
+    <div id="initial-loader" class="fixed inset-0 z-[9999] bg-navy-900/95 text-white flex items-center justify-center">
+        <div class="text-center px-6">
+            <div class="h-14 w-14 mx-auto rounded-full border-4 border-blue-300 border-t-blue-600 mb-4" style="animation: spinLoader 0.8s linear infinite;"></div>
+            <p class="text-sm font-black uppercase tracking-widest">Carregando Dashboard</p>
+            <p class="text-xs text-blue-200 mt-2">Sincronizando dados e preparando gráficos...</p>
+        </div>
+    </div>
+
+    <header class="bg-navy-900 text-white shadow-2xl shrink-0 z-50 border-b border-navy-700">
+        <div class="container mx-auto px-6 py-2 flex justify-between items-center">
+            <div class="flex items-center gap-6">
+                <img src="https://i.imgur.com/vXM6l52.png" alt="Logo" class="h-14 w-auto object-contain brightness-0 invert">
+                <div class="h-8 w-[1px] bg-navy-700 hidden md:block"></div>
+                <span class="text-lg font-light tracking-[0.2em] uppercase hidden md:block">Glosa<span class="font-black text-blue-400">LAMIC</span></span>
+            </div>
+            <nav class="flex bg-navy-800/50 rounded-xl p-1.5 border border-navy-700">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-6 py-2.5 rounded-lg bg-blue-600 transition-all font-bold text-xs tracking-widest shadow-lg">
+                    <i class="fas fa-chart-pie mr-2"></i>DASHBOARD
+                </button>
+                <button onclick="switchTab('dados')" id="btn-dados" class="px-6 py-2.5 rounded-lg hover:bg-navy-700 transition-all font-bold text-xs tracking-widest ml-1">
+                    <i class="fas fa-table-list mr-2"></i>DADOS
+                </button>
+                <button onclick="switchTab('pagos')" id="btn-pagos" class="px-6 py-2.5 rounded-lg hover:bg-navy-700 transition-all font-bold text-xs tracking-widest ml-1">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i>PAGOS
+                </button>
+                <button onclick="switchTab('backup')" id="btn-backup" title="Backup" class="px-4 py-2.5 rounded-lg hover:bg-navy-700 transition-all font-bold text-xs tracking-widest ml-1">
+                    <i class="fas fa-gear"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-auto p-6">
+        <section id="tab-dashboard" class="tab-content active container mx-auto">
+            
+            <div class="glass-card p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-navy-900 font-black text-sm uppercase tracking-tighter flex items-center gap-2">
+                        <i class="fas fa-filter text-blue-500"></i> Painel de Controle Analítico
+                    </h2>
+                    <select id="filter-type" onchange="toggleFilterInputs(); updateDashboardFiltersByTime()" class="text-xs font-bold border-slate-200 rounded-lg bg-slate-50">
+                        <option value="all">Geral (Lifetime)</option>
+                        <option value="range">Período Personalizado</option>
+                        <option value="month">Mês Específico</option>
+                        <option value="year" selected>Ano Inteiro</option>
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                    <div id="box-start" class="hidden">
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Data Início</label>
+                        <input type="date" id="dash-start" onchange="updateDashboardFiltersByTime()" class="w-full border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div id="box-end" class="hidden">
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Data Fim</label>
+                        <input type="date" id="dash-end" onchange="updateDashboardFiltersByTime()" class="w-full border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div id="box-month" class="hidden">
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Mês Referência</label>
+                        <input type="month" id="dash-month" onchange="updateDashboardFiltersByTime()" class="w-full border-slate-200 rounded-lg text-sm">
+                    </div>
+                    <div id="box-year">
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Ano Base</label>
+                        <input type="number" id="dash-year" value="2026" onchange="updateDashboardFiltersByTime()" class="w-full border-slate-200 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Convênio</label>
+                        <select id="dash-convenio" class="w-full border-slate-200 rounded-lg text-sm dynamic-select-convenio"><option value="">Todos</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Unidade</label>
+                        <select id="dash-unidade" class="w-full border-slate-200 rounded-lg text-sm dynamic-select-unidade"><option value="">Todas</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Colaborador</label>
+                        <select id="dash-colaborador" class="w-full border-slate-200 rounded-lg text-sm dynamic-select-colaborador"><option value="">Todos</option></select>
+                    </div>
+                    <button onclick="updateDashboard()" class="bg-navy-900 text-white font-black text-xs py-3 rounded-lg hover:bg-blue-700 transition-all shadow-lg uppercase tracking-widest">
+                        Atualizar
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-600">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total Glosado</p>
+                    <p id="kpi-total" class="text-xl font-black text-navy-900 mt-1">R$ 0,00</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Acatado</p>
+                    <p id="kpi-acatado" class="text-xl font-black text-green-600 mt-1">R$ 0,00</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-yellow-500">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Pendente</p>
+                    <p id="kpi-contestar" class="text-xl font-black text-yellow-600 mt-1">R$ 0,00</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-red-500">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Perdido</p>
+                    <p id="kpi-perdido" class="text-xl font-black text-red-600 mt-1">R$ 0,00</p>
+                </div>
+                <div class="bg-navy-900 p-6 rounded-2xl shadow-xl text-white relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fas fa-chart-line text-6xl"></i></div>
+                    <p class="text-blue-300 text-[10px] font-bold uppercase tracking-widest relative z-10">Eficiência</p>
+                    <p id="kpi-taxa" class="text-2xl font-black mt-1 relative z-10">0%</p>
+                </div>
+                <div class="bg-green-600 p-6 rounded-2xl shadow-xl text-white relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fas fa-hand-holding-usd text-6xl"></i></div>
+                    <p class="text-green-200 text-[10px] font-bold uppercase tracking-widest relative z-10">Conciliado (Pago)</p>
+                    <p id="kpi-pago" class="text-xl font-black mt-1 relative z-10">R$ 0,00</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-pie text-blue-500"></i> Proporção Conciliação Geral</h3>
+                    <div class="h-72 relative"><canvas id="chartConciliacaoPie"></canvas></div>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-bar text-blue-500"></i> Acatado vs Pago Efetivo (Por Convênio)</h3>
+                    <div class="h-72 relative"><canvas id="chartConciliacaoBar"></canvas></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-line text-blue-500"></i> Evolução Temporal de Glosas</h3>
+                    <div class="h-72 relative"><canvas id="chartLine"></canvas></div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-pie text-blue-500"></i> Status das Contestações</h3>
+                    <div class="h-72 relative"><canvas id="chartStatus"></canvas></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-balance-scale text-blue-500"></i> Glosado vs Acatado (Convênios)</h3>
+                    <div class="h-72 relative"><canvas id="chartCompare"></canvas></div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-tags text-blue-500"></i> Ticket Médio por Convênio</h3>
+                    <div class="h-72 relative"><canvas id="chartTicket"></canvas></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-user-md text-blue-500"></i> Ranking de Glosa por Colaborador</h3>
+                    <div class="h-72 flex flex-col">
+                        <div class="flex-1 overflow-auto border border-slate-100 rounded-xl">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-[0.15em] font-black sticky top-0">
+                                    <tr>
+                                        <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
+                                        <th class="p-3 border-b border-slate-200">Colaborador</th>
+                                        <th class="p-3 border-b border-slate-200">Volume de Glosa</th>
+                                        <th class="p-3 border-b border-slate-200 text-right w-36">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="colaborador-ranking-body" class="text-sm divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                            <button id="colab-prev" onclick="changeColaboradorRankingPage(-1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
+                            <span id="colab-page-info">Página 1 de 1</span>
+                            <button id="colab-next" onclick="changeColaboradorRankingPage(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-hospital text-blue-500"></i> Ranking de Volume de Glosas por Unidade</h3>
+                    <div class="h-72 flex flex-col">
+                        <div class="flex-1 overflow-auto border border-slate-100 rounded-xl">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-[0.15em] font-black sticky top-0">
+                                    <tr>
+                                        <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
+                                        <th class="p-3 border-b border-slate-200">Unidade</th>
+                                        <th class="p-3 border-b border-slate-200">Volume de Glosa</th>
+                                        <th class="p-3 border-b border-slate-200 text-right w-36">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="unidade-ranking-body" class="text-sm divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                            <button id="uni-prev" onclick="changeUnidadeRankingPage(-1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
+                            <span id="uni-page-info">Página 1 de 1</span>
+                            <button id="uni-next" onclick="changeUnidadeRankingPage(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-dados" class="tab-content container mx-auto">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="p-6 bg-slate-50 border-b border-slate-200">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                        <div>
+                            <h2 class="text-2xl font-black text-navy-900 tracking-tighter uppercase">Protocolo de Glosas</h2>
+                            <p class="text-xs text-slate-400 font-bold">GESTÃO DE LANÇAMENTOS E AUDITORIA</p>
+                        </div>
+                        <div class="flex flex-wrap gap-3 w-full lg:w-auto">
+                            <button onclick="openManageListsModal()" class="flex-1 lg:flex-none px-5 py-2.5 border-2 border-navy-800 text-navy-800 rounded-xl hover:bg-navy-800 hover:text-white font-black text-[10px] tracking-widest transition-all">
+                                <i class="fas fa-cog mr-2"></i>PARÂMETROS
+                            </button>
+                            <button onclick="openRecordModal()" class="flex-1 lg:flex-none px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-black text-[10px] tracking-widest shadow-lg transition-all">
+                                <i class="fas fa-plus mr-2"></i>NOVA GLOSA
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="table-search" onkeyup="renderTable()" placeholder="Buscar Paciente ou Lote..." class="w-full pl-11 pr-4 py-3 bg-white border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 shadow-sm">
+                        </div>
+                        <select id="table-filter-conv" onchange="renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm dynamic-select-convenio">
+                            <option value="">Todos os Convênios</option>
+                        </select>
+                        <select id="table-filter-uni" onchange="renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm dynamic-select-unidade">
+                            <option value="">Todas as Unidades</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-navy-900 text-white text-[10px] uppercase tracking-[0.2em] font-black">
+                            <tr>
+                                <th class="p-5 border-b border-navy-800">Data</th>
+                                <th class="p-5 border-b border-navy-800">Convênio / Unidade</th>
+                                <th class="p-5 border-b border-navy-800">Paciente / Lote</th>
+                                <th class="p-5 border-b border-navy-800">Colaborador</th>
+                                <th class="p-5 border-b border-navy-800 text-right">Valor Glosa</th>
+                                <th class="p-5 border-b border-navy-800 text-center">Status</th>
+                                <th class="p-5 border-b border-navy-800 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="text-sm divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500">
+                    <button id="dados-prev" onclick="changeDadosPage(-1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
+                    <span id="dados-page-info">Página 1 de 1</span>
+                    <button id="dados-next" onclick="changeDadosPage(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-pagos" class="tab-content container mx-auto">
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="p-6 bg-slate-50 border-b border-slate-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    <div>
+                        <h2 class="text-2xl font-black text-navy-900 tracking-tighter uppercase">Pagamentos Efetuados</h2>
+                        <p class="text-xs text-slate-400 font-bold">LIVRO CAIXA DOS CONVÊNIOS</p>
+                    </div>
+                    <button onclick="openPagosModal()" class="w-full lg:w-auto px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 font-black text-[10px] tracking-widest shadow-lg transition-all">
+                        <i class="fas fa-plus mr-2"></i>REGISTRAR PAGAMENTO
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-green-700 text-white text-[10px] uppercase tracking-[0.2em] font-black">
+                            <tr>
+                                <th class="p-5 border-b border-green-800 w-32">Data Repasse</th>
+                                <th class="p-5 border-b border-green-800">Convênio / Operadora</th>
+                                <th class="p-5 border-b border-green-800 text-right">Valor Depositado</th>
+                                <th class="p-5 border-b border-green-800 text-center w-32">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-pagos-body" class="text-sm divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500">
+                    <button id="pagos-prev" onclick="changePagosPage(-1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
+                    <span id="pagos-page-info">Página 1 de 1</span>
+                    <button id="pagos-next" onclick="changePagosPage(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-backup" class="tab-content container mx-auto">
+            <div class="bg-gradient-to-br from-slate-50 via-white to-blue-50 rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="px-8 py-7 border-b border-slate-200 bg-white/70 backdrop-blur-sm">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl lg:text-3xl font-black text-navy-900 tracking-tight uppercase flex items-center gap-3">
+                                <span class="h-11 w-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-sm">
+                                    <i class="fas fa-shield-halved"></i>
+                                </span>
+                                Central de Backup
+                            </h2>
+                            <p class="text-sm text-slate-500 font-semibold mt-2">Proteja seus dados com exportacao segura e restauracao completa.</p>
+                        </div>
+                        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-[11px] font-black tracking-widest uppercase border border-blue-100 w-fit">
+                            <i class="fas fa-database"></i>Dados Locais
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-8 grid grid-cols-1 xl:grid-cols-12 gap-6">
+                    <div class="xl:col-span-5 border border-blue-100 bg-white rounded-2xl p-6 shadow-sm">
+                        <div class="h-12 w-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center mb-4">
+                            <i class="fas fa-file-arrow-down text-lg"></i>
+                        </div>
+                        <h3 class="font-black uppercase text-sm tracking-wide text-navy-900 mb-2">Exportar Backup</h3>
+                        <p class="text-sm text-slate-500 mb-6 leading-relaxed">Crie um arquivo JSON completo com listas, glosas e pagamentos para guardar em local seguro.</p>
+                        <button onclick="downloadBackup()" class="w-full px-6 py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-black text-[11px] tracking-widest shadow-lg transition-all">
+                            <i class="fas fa-download mr-2"></i>BAIXAR BACKUP
+                        </button>
+                    </div>
+
+                    <div class="xl:col-span-7 border border-slate-200 bg-white rounded-2xl p-6 shadow-sm">
+                        <div class="h-12 w-12 rounded-xl text-navy-900 flex items-center justify-center mb-4 bg-slate-100">
+                            <i class="fas fa-file-import text-lg"></i>
+                        </div>
+                        <h3 class="font-black uppercase text-sm tracking-wide text-navy-900 mb-2">Restaurar Backup</h3>
+                        <p class="text-sm text-slate-500 mb-5 leading-relaxed">Selecione um arquivo JSON para restaurar os dados. A importacao substitui integralmente o conteudo atual.</p>
+                        
+                        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-4 bg-slate-50/60 mb-4">
+                            <label for="backup-file-input" class="block text-[11px] font-black uppercase tracking-widest text-slate-500 mb-2">Arquivo de Backup</label>
+                            <input id="backup-file-input" type="file" accept=".json,application/json" class="w-full text-sm border border-slate-200 bg-white rounded-xl p-3">
+                            <p class="text-[11px] text-slate-400 mt-2">Formato aceito: .json</p>
+                        </div>
+
+                        <button onclick="uploadBackup()" class="w-full px-6 py-3.5 bg-navy-900 text-white rounded-xl hover:bg-blue-700 font-black text-[11px] tracking-widest shadow-lg transition-all">
+                            <i class="fas fa-upload mr-2"></i>CARREGAR E SUBSTITUIR DADOS
+                        </button>
+
+                        <p class="mt-3 text-[11px] text-slate-400 font-semibold">Dica: faca um backup atual antes de restaurar um arquivo antigo.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="modal-record" class="modal fixed inset-0 bg-navy-900/90 backdrop-blur-md z-[100] justify-center items-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-3xl overflow-hidden border border-white/20 my-auto">
+            <div class="bg-navy-900 p-6 text-white flex justify-between items-center">
+                <div>
+                    <h3 id="modal-title" class="font-black uppercase tracking-tight text-xl">Lançamento de Glosa</h3>
+                    <p class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Auditoria Operacional</p>
+                </div>
+                <button onclick="closeModals()" class="h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="record-form" onsubmit="saveRecord(event)" class="p-10 grid grid-cols-2 gap-6">
+                <input type="hidden" id="reg-id">
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Data da Ocorrência</label>
+                    <input type="date" id="reg-data" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Número do Lote</label>
+                    <input type="text" id="reg-lote" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm" placeholder="Ex: L-9982">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Convênio Saúde</label>
+                    <select id="reg-convenio" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm dynamic-select-convenio"></select>
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Unidade Prestadora</label>
+                    <select id="reg-unidade" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm dynamic-select-unidade"></select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Nome Completo do Paciente</label>
+                    <input type="text" id="reg-paciente" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Colaborador Responsável</label>
+                    <select id="reg-colaborador" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm dynamic-select-colaborador"></select>
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Valor da Glosa (R$)</label>
+                    <input type="number" id="reg-valor" step="0.01" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm font-bold text-navy-900">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Status do Processo</label>
+                    <select id="reg-status" required onchange="toggleParcial()" class="w-full border-slate-200 rounded-xl py-3 shadow-sm font-bold text-slate-700 focus:ring-blue-500">
+                        <option value="A contestar">A contestar</option>
+                        <option value="Contestado">Contestado</option>
+                        <option value="Acatado">Acatado</option>
+                        <option value="Parcial">Parcial</option>
+                        <option value="Perdido">Perdido</option>
+                    </select>
+                </div>
+                
+                <div class="col-span-2 hidden bg-orange-50 p-4 rounded-xl border border-orange-200" id="box-valor-parcial">
+                    <label class="block text-[10px] font-black text-orange-800 uppercase mb-2">Valor Parcial Acatado/Pago (R$)</label>
+                    <input type="number" id="reg-valor-parcial" step="0.01" class="w-full border-orange-300 rounded-xl py-3 shadow-sm text-orange-900 font-bold focus:ring-orange-500" placeholder="0.00">
+                    <p class="text-[9px] text-orange-700 mt-2 uppercase tracking-widest font-bold"><i class="fas fa-exclamation-triangle mr-1"></i>A diferença em relação ao valor da glosa será declarada como PERDIDA.</p>
+                </div>
+
+                <div class="col-span-2 mt-6 flex gap-4">
+                    <button type="submit" class="flex-1 bg-navy-900 text-white font-black py-4 rounded-2xl hover:bg-blue-600 shadow-xl transition-all uppercase tracking-widest text-xs">Confirmar Lançamento</button>
+                    <button type="button" onclick="closeModals()" class="px-8 py-4 border-2 border-slate-100 rounded-2xl font-black text-slate-400 hover:bg-slate-50 transition-all text-xs uppercase tracking-widest">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-pagos" class="modal fixed inset-0 bg-navy-900/90 backdrop-blur-md z-[100] justify-center items-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-white/20">
+            <div class="bg-green-700 p-6 text-white flex justify-between items-center">
+                <div>
+                    <h3 id="modal-pagos-title" class="font-black uppercase tracking-tight text-xl">Registrar Depósito</h3>
+                    <p class="text-[10px] text-green-200 font-bold uppercase tracking-widest">Livro Caixa Conciliação</p>
+                </div>
+                <button onclick="closeModals()" class="h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="pagos-form" onsubmit="savePagamento(event)" class="p-8 grid grid-cols-1 gap-6">
+                <input type="hidden" id="pago-id">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Data do Repasse</label>
+                    <input type="date" id="pago-data" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Convênio</label>
+                    <select id="pago-convenio" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm dynamic-select-convenio"></select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Valor Depositado (R$)</label>
+                    <input type="number" id="pago-valor" step="0.01" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm font-bold text-green-700 text-xl">
+                </div>
+                <div class="mt-4 flex gap-3">
+                    <button type="submit" class="flex-1 bg-green-600 text-white font-black py-4 rounded-xl hover:bg-green-800 shadow-xl transition-all uppercase tracking-widest text-xs">Salvar Recebimento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-obs" class="modal fixed inset-0 bg-navy-900/90 backdrop-blur-md z-[100] justify-center items-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="bg-navy-900 p-6 text-white flex justify-between items-center">
+                <h3 class="font-black uppercase text-sm tracking-widest">Anotações da Glosa</h3>
+                <button onclick="closeModals()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-8">
+                <input type="hidden" id="obs-id">
+                <textarea id="obs-text" rows="6" class="w-full border-slate-200 rounded-2xl p-5 focus:ring-navy-800 text-sm shadow-inner bg-slate-50" placeholder="Insira aqui as justificativas, protocolos de recurso ou observações técnicas..."></textarea>
+                <button onclick="saveObservation()" class="w-full mt-6 bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-navy-900 transition-all uppercase tracking-widest text-xs">Salvar Histórico</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-lists" class="modal fixed inset-0 bg-navy-900/90 z-[100] justify-center items-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="bg-navy-900 p-5 text-white flex justify-between items-center">
+                <h3 class="font-black uppercase tracking-widest text-xs">Gerenciar Parâmetros</h3>
+                <button onclick="closeModals()"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-8">
+                <select id="list-selector" onchange="renderListManager()" class="w-full border-slate-200 rounded-xl mb-6 font-black text-navy-900 uppercase text-xs tracking-widest bg-slate-50">
+                    <option value="convenios">CONVÊNIOS</option>
+                    <option value="unidades">UNIDADES</option>
+                </select>
+                <div class="flex gap-2 mb-6">
+                    <input type="text" id="new-list-item" class="flex-1 border-slate-200 rounded-xl shadow-sm text-sm" placeholder="Nome do item...">
+                    <button onclick="addListItem()" class="bg-blue-600 text-white px-5 rounded-xl hover:bg-blue-700 shadow-md transition-all"><i class="fas fa-plus"></i></button>
+                </div>
+                <ul id="list-items-container" class="border border-slate-100 rounded-2xl max-h-60 overflow-y-auto divide-y divide-slate-50 shadow-inner"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados Iniciais
+        let listas = {
+            convenios: ["Unimed", "Amil", "Bradesco Saúde", "Sulamérica", "Casssi", "Saúde Caixa"],
+            unidades: ["Hospital Central", "Pronto Socorro Oeste", "Unidade Diagnóstico", "Filial Litoral"],
+            colaboradores: ["Dr. Carlos Auditori", "Dra. Helena Souza", "Ricardo Gestão", "Amanda Recurso"]
+        };
+
+        // Adicionado "valorParcial" à estrutura de glosas
+        let glosas = [
+            { id: 1, data: "2026-01-10", convenio: "Unimed", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "João Silva", lote: "L-100", valor: 1500.00, status: "Acatado", valorParcial: 0, obs: "" },
+            { id: 2, data: "2026-02-15", convenio: "Amil", unidade: "Pronto Socorro Oeste", colaborador: "Dra. Helena Souza", paciente: "Ana Souza", lote: "L-101", valor: 2800.00, status: "A contestar", valorParcial: 0, obs: "Falta carimbo legível no prontuário" },
+            { id: 3, data: "2026-03-05", convenio: "Unimed", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "Beto Lima", lote: "L-102", valor: 900.00, status: "Perdido", valorParcial: 0, obs: "Prazo de recurso expirado pelo sistema" },
+            { id: 4, data: "2026-04-20", convenio: "Bradesco Saúde", unidade: "Unidade Diagnóstico", colaborador: "Ricardo Gestão", paciente: "Clara Luz", lote: "L-103", valor: 3500.00, status: "Contestado", valorParcial: 0, obs: "" },
+            { id: 5, data: "2026-01-25", convenio: "Bradesco Saúde", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "Maria Eduarda", lote: "L-104", valor: 1200.00, status: "Acatado", valorParcial: 0, obs: "" },
+            { id: 6, data: "2026-02-10", convenio: "Sulamérica", unidade: "Filial Litoral", colaborador: "Amanda Recurso", paciente: "Roberto Justos", lote: "L-105", valor: 2000.00, status: "Parcial", valorParcial: 1200.00, obs: "" }
+        ];
+
+        // Novo array para a aba de Pagos
+        let pagamentos = [
+            { id: 1, data: "2026-02-15", convenio: "Unimed", valor: 1500.00 },
+            { id: 2, data: "2026-03-10", convenio: "Bradesco Saúde", valor: 1200.00 }
+        ];
+
+        const COLABORADORES_API_URL = "https://script.google.com/macros/s/AKfycbzUd6efhfzkCmYd88_eIIL6dGIQxIINsw-6Y_qM3PRemUbZ06obtF9xKY1S8WRfvXyq9Q/exec";
+        let instances = {};
+        let colaboradorRanking = [];
+        let colaboradorRankingPage = 1;
+        const colaboradorRankingPageSize = 8;
+        let unidadeRanking = [];
+        let unidadeRankingPage = 1;
+        const unidadeRankingPageSize = 8;
+        let dadosPage = 1;
+        let pagosPage = 1;
+        const tablePageSize = 20;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgDY2f1pwAKf-ldXXm25cASMy3tney1ZA",
+            authDomain: "convenios-9a0d0.firebaseapp.com",
+            databaseURL: "https://convenios-9a0d0-default-rtdb.firebaseio.com",
+            projectId: "convenios-9a0d0",
+            storageBucket: "convenios-9a0d0.firebasestorage.app",
+            messagingSenderId: "942380140831",
+            appId: "1:942380140831:web:41993d5ab6acb6ff48c82a"
+        };
+
+        const firebaseApp = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database(firebaseApp);
+        const dbRootRef = database.ref('glosaAppData');
+        const initialChartIds = ['chartConciliacaoPie', 'chartConciliacaoBar', 'chartLine', 'chartStatus', 'chartCompare', 'chartTicket'];
+
+        window.onload = async () => {
+            const yearInput = document.getElementById('dash-year');
+            if (yearInput) yearInput.value = new Date().getFullYear();
+
+            setInitialLoadingState(true);
+            await loadDataFromFirebase();
+            await loadColaboradoresFromAPI();
+            refreshAllUI();
+            await waitForInitialChartsReady();
+            setInitialLoadingState(false);
+            setupRealtimeSync();
+        };
+
+        function normalizeString(str) {
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        }
+
+        async function loadColaboradoresFromAPI() {
+            try {
+                const response = await fetch(COLABORADORES_API_URL, { cache: "no-store" });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const payload = await response.json();
+                if (!Array.isArray(payload)) throw new Error("Formato inválido");
+
+                const colaboradores = payload
+                    .map(item => typeof item === 'string' ? item.trim() : '')
+                    .filter(Boolean);
+
+                if (colaboradores.length > 0) {
+                    listas.colaboradores = [...new Set(colaboradores)];
+                }
+            } catch (error) {
+                console.warn("Não foi possível carregar colaboradores via API.", error);
+            }
+        }
+
+        async function loadDataFromFirebase() {
+            try {
+                const snapshot = await dbRootRef.get();
+                if (!snapshot.exists()) return;
+
+                const payload = snapshot.val() || {};
+                if (payload.listas && typeof payload.listas === 'object') {
+                    listas = {
+                        convenios: Array.isArray(payload.listas.convenios) ? payload.listas.convenios : listas.convenios,
+                        unidades: Array.isArray(payload.listas.unidades) ? payload.listas.unidades : listas.unidades,
+                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores : listas.colaboradores
+                    };
+                }
+                if (Array.isArray(payload.glosas)) glosas = payload.glosas;
+                if (Array.isArray(payload.pagamentos)) pagamentos = payload.pagamentos;
+            } catch (error) {
+                console.warn("Falha ao carregar dados do Firebase. Seguindo com dados locais.", error);
+            }
+        }
+
+        function persistDataToFirebase() {
+            const payload = { listas, glosas, pagamentos, updatedAt: new Date().toISOString() };
+            dbRootRef.set(payload).catch(error => {
+                console.warn("Falha ao salvar dados no Firebase.", error);
+            });
+        }
+
+        function refreshAllUI() {
+            updateDropdownsUI();
+            updateDashboardFiltersByTime();
+            renderTable();
+            renderPagosTable();
+            updateDashboard();
+        }
+
+        function setupRealtimeSync() {
+            dbRootRef.on('value', async snapshot => {
+                if (!snapshot.exists()) return;
+                const payload = snapshot.val() || {};
+                if (payload.listas && typeof payload.listas === 'object') {
+                    listas = {
+                        convenios: Array.isArray(payload.listas.convenios) ? payload.listas.convenios : listas.convenios,
+                        unidades: Array.isArray(payload.listas.unidades) ? payload.listas.unidades : listas.unidades,
+                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores : listas.colaboradores
+                    };
+                }
+                if (Array.isArray(payload.glosas)) glosas = payload.glosas;
+                if (Array.isArray(payload.pagamentos)) pagamentos = payload.pagamentos;
+
+                await loadColaboradoresFromAPI();
+                refreshAllUI();
+            }, error => {
+                console.warn("Falha na sincronização em tempo real com Firebase.", error);
+            });
+        }
+
+        function setInitialLoadingState(isLoading) {
+            const loader = document.getElementById('initial-loader');
+            const header = document.querySelector('header');
+            const main = document.querySelector('main');
+            if (!loader || !header || !main) return;
+
+            if (isLoading) {
+                loader.classList.remove('hidden');
+                header.classList.add('invisible');
+                main.classList.add('invisible');
+                document.body.style.overflow = 'hidden';
+            } else {
+                loader.classList.add('hidden');
+                header.classList.remove('invisible');
+                main.classList.remove('invisible');
+                document.body.style.overflow = '';
+            }
+        }
+
+        async function waitForInitialChartsReady(timeoutMs = 10000) {
+            const start = Date.now();
+            const isChartReady = (chartId) => {
+                const canvas = document.getElementById(chartId);
+                if (!canvas) return true;
+                const wrapper = canvas.parentElement;
+                const hiddenByNoData = wrapper && wrapper.style.display === 'none';
+                return !!instances[chartId] || hiddenByNoData;
+            };
+
+            while (Date.now() - start < timeoutMs) {
+                const allReady = initialChartIds.every(isChartReady);
+                if (allReady) return;
+                await new Promise(resolve => setTimeout(resolve, 80));
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            const common = "px-6 py-2.5 rounded-lg transition-all font-bold text-xs tracking-widest ";
+            document.getElementById('btn-dashboard').className = common + (tab === 'dashboard' ? 'bg-blue-600 shadow-lg' : 'hover:bg-navy-700 ml-1');
+            document.getElementById('btn-dados').className = common + (tab === 'dados' ? 'bg-blue-600 shadow-lg' : 'hover:bg-navy-700 ml-1');
+            document.getElementById('btn-pagos').className = common + (tab === 'pagos' ? 'bg-blue-600 shadow-lg' : 'hover:bg-navy-700 ml-1');
+            document.getElementById('btn-backup').className = "px-4 py-2.5 rounded-lg transition-all font-bold text-xs tracking-widest ml-1 " + (tab === 'backup' ? 'bg-blue-600 shadow-lg' : 'hover:bg-navy-700');
+            
+            if(tab === 'dashboard') updateDashboard();
+        }
+
+        function toggleFilterInputs() {
+            const type = document.getElementById('filter-type').value;
+            document.getElementById('box-start').classList.toggle('hidden', type !== 'range');
+            document.getElementById('box-end').classList.toggle('hidden', type !== 'range');
+            document.getElementById('box-month').classList.toggle('hidden', type !== 'month');
+            document.getElementById('box-year').classList.toggle('hidden', type !== 'year');
+        }
+
+        function toggleParcial() {
+            const isParcial = document.getElementById('reg-status').value === 'Parcial';
+            document.getElementById('box-valor-parcial').classList.toggle('hidden', !isParcial);
+            if(!isParcial) document.getElementById('reg-valor-parcial').value = '';
+        }
+
+        function matchesDashboardTimeFilter(dateValue) {
+            if (!dateValue) return false;
+            const type = document.getElementById('filter-type').value;
+            if (type === 'all') return true;
+            if (type === 'year') return dateValue.startsWith(document.getElementById('dash-year').value);
+            if (type === 'month') return dateValue.startsWith(document.getElementById('dash-month').value);
+            if (type === 'range') {
+                const s = document.getElementById('dash-start').value;
+                const e = document.getElementById('dash-end').value;
+                return (s ? dateValue >= s : true) && (e ? dateValue <= e : true);
+            }
+            return true;
+        }
+
+        function updateDashboardFiltersByTime() {
+            const convenioSelect = document.getElementById('dash-convenio');
+            const unidadeSelect = document.getElementById('dash-unidade');
+            const colaboradorSelect = document.getElementById('dash-colaborador');
+
+            const selectedConvenio = convenioSelect.value;
+            const selectedUnidade = unidadeSelect.value;
+            const selectedColaborador = colaboradorSelect.value;
+
+            const glosasNoPeriodo = glosas.filter(g => matchesDashboardTimeFilter(g.data));
+            const pagosNoPeriodo = pagamentos.filter(p => matchesDashboardTimeFilter(p.data));
+
+            const conveniosComDados = [...new Set([
+                ...glosasNoPeriodo.map(g => g.convenio),
+                ...pagosNoPeriodo.map(p => p.convenio)
+            ])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            const unidadesComDados = [...new Set(glosasNoPeriodo.map(g => g.unidade))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            const colaboradoresAPI = [...new Set((listas.colaboradores || []).map(c => String(c).trim()).filter(Boolean))]
+                .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+            convenioSelect.innerHTML = `<option value="">Todos</option>` + conveniosComDados.map(i => `<option value="${i}">${i}</option>`).join('');
+            unidadeSelect.innerHTML = `<option value="">Todas</option>` + unidadesComDados.map(i => `<option value="${i}">${i}</option>`).join('');
+            colaboradorSelect.innerHTML = `<option value="">Todos</option>` + colaboradoresAPI.map(i => `<option value="${i}">${i}</option>`).join('');
+
+            convenioSelect.value = conveniosComDados.includes(selectedConvenio) ? selectedConvenio : '';
+            unidadeSelect.value = unidadesComDados.includes(selectedUnidade) ? selectedUnidade : '';
+            colaboradorSelect.value = colaboradoresAPI.includes(selectedColaborador) ? selectedColaborador : '';
+
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const type = document.getElementById('filter-type').value;
+            const conv = document.getElementById('dash-convenio').value;
+            const uni = document.getElementById('dash-unidade').value;
+            const colab = document.getElementById('dash-colaborador').value;
+
+            // Filtra Glosas
+            let filtered = glosas.filter(g => {
+                let matchTime = true;
+                if (type === 'all') matchTime = true;
+                else if (type === 'year') matchTime = g.data.startsWith(document.getElementById('dash-year').value);
+                else if (type === 'month') matchTime = g.data.startsWith(document.getElementById('dash-month').value);
+                else if (type === 'range') {
+                    const s = document.getElementById('dash-start').value;
+                    const e = document.getElementById('dash-end').value;
+                    matchTime = (s ? g.data >= s : true) && (e ? g.data <= e : true);
+                }
+                return matchTime && 
+                       (conv ? g.convenio === conv : true) && 
+                       (uni ? g.unidade === uni : true) &&
+                       (colab ? g.colaborador === colab : true);
+            });
+
+            // Filtra Pagamentos (ignora unidade e colaborador, é geral do convênio no período)
+            let filteredPagos = pagamentos.filter(p => {
+                let matchTime = true;
+                if (type === 'all') matchTime = true;
+                else if (type === 'year') matchTime = p.data.startsWith(document.getElementById('dash-year').value);
+                else if (type === 'month') matchTime = p.data.startsWith(document.getElementById('dash-month').value);
+                else if (type === 'range') {
+                    const s = document.getElementById('dash-start').value;
+                    const e = document.getElementById('dash-end').value;
+                    matchTime = (s ? p.data >= s : true) && (e ? p.data <= e : true);
+                }
+                return matchTime && (conv ? p.convenio === conv : true);
+            });
+
+            // Lógica de Negócio de KPIs com o Status Parcial
+            let total = 0, acatado = 0, contestar = 0, perdido = 0;
+            filtered.forEach(g => {
+                total += g.valor;
+                if(g.status === 'Acatado') acatado += g.valor;
+                else if(g.status === 'Perdido') perdido += g.valor;
+                else if(g.status === 'Parcial') {
+                    acatado += g.valorParcial;
+                    perdido += (g.valor - g.valorParcial);
+                }
+                else { // A contestar ou Contestado
+                    contestar += g.valor;
+                }
+            });
+
+            let totalPago = filteredPagos.reduce((acc, curr) => acc + curr.valor, 0);
+            const taxa = total > 0 ? ((acatado / total) * 100).toFixed(1) : 0;
+            const percentualPago = acatado > 0 ? ((totalPago / acatado) * 100).toFixed(1) : 0;
+
+            document.getElementById('kpi-total').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('kpi-acatado').innerText = acatado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('kpi-contestar').innerText = contestar.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('kpi-perdido').innerText = perdido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('kpi-taxa').innerText = taxa + '%';
+            document.getElementById('kpi-pago').innerText = percentualPago + '%';
+
+            renderCharts(filtered, filteredPagos, acatado, totalPago);
+        }
+
+        function renderCharts(data, pagamentosData, totalAcatadoGeral, totalPagoGeral) {
+            const statusConfig = { "A contestar": "#fde047", "Contestado": "#60a5fa", "Acatado": "#22c55e", "Parcial": "#fb923c", "Perdido": "#ef4444" };
+            
+            // --- Novos Gráficos: Acatado vs Pago (Conciliação) --- //
+            
+            // Pie: Conciliação Geral (Diferença entre o que foi Acatado e o que efetivamente caiu na conta)
+            // Se o que foi pago for maior que acatado (recebimento atrasado), limitamos a view ou mostramos o "sobra". Vamos manter simples.
+            let pendentePgto = Math.max(0, totalAcatadoGeral - totalPagoGeral);
+            refreshChart('chartConciliacaoPie', 'doughnut', {
+                labels: ['Aguardando Depósito', 'Valor Já Pago'],
+                datasets: [{ data: [pendentePgto, totalPagoGeral], backgroundColor: ['#fca5a5', '#16a34a'], borderWeight: 0 }]
+            }, { plugins: { legend: { position: 'bottom' } }, cutout: '75%' });
+
+            // Bar: Acatado vs Pago por Convênio (somente convênios com dados no período)
+            const convs = [...new Set([...data.map(g=>g.convenio), ...pagamentosData.map(p=>p.convenio)])];
+            
+            const acatadoPorConv = convs.map(c => data.filter(g => g.convenio === c).reduce((acc, g) => {
+                if(g.status === 'Acatado') return acc + g.valor;
+                if(g.status === 'Parcial') return acc + g.valorParcial;
+                return acc;
+            }, 0));
+
+            const pagoPorConv = convs.map(c => pagamentosData.filter(p => p.convenio === c).reduce((acc, p) => acc + p.valor, 0));
+
+            const convsComDados = convs.filter((_, idx) => acatadoPorConv[idx] > 0 || pagoPorConv[idx] > 0);
+            const acatadoPorConvComDados = convsComDados.map(c => data.filter(g => g.convenio === c).reduce((acc, g) => {
+                if(g.status === 'Acatado') return acc + g.valor;
+                if(g.status === 'Parcial') return acc + g.valorParcial;
+                return acc;
+            }, 0));
+            const pagoPorConvComDados = convsComDados.map(c => pagamentosData.filter(p => p.convenio === c).reduce((acc, p) => acc + p.valor, 0));
+
+            refreshChart('chartConciliacaoBar', 'bar', {
+                labels: convsComDados,
+                datasets: [
+                    { label: 'Acatado (A Receber)', data: acatadoPorConvComDados, backgroundColor: '#1e3a8a', borderRadius: 5 },
+                    { label: 'Efetivo Pago', data: pagoPorConvComDados, backgroundColor: '#22c55e', borderRadius: 5 }
+                ]
+            });
+
+            // --- Gráficos Originais Ajustados --- //
+
+            const statusMap = data.reduce((acc, curr) => { acc[curr.status] = (acc[curr.status] || 0) + curr.valor; return acc; }, {});
+            refreshChart('chartStatus', 'doughnut', {
+                labels: Object.keys(statusMap),
+                datasets: [{ data: Object.values(statusMap), backgroundColor: Object.keys(statusMap).map(k => statusConfig[k]), borderWeight: 0 }]
+            }, { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } }, cutout: '70%' });
+
+            const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+            const lineData = new Array(12).fill(0);
+            data.forEach(g => { const m = new Date(g.data).getUTCMonth(); lineData[m] += g.valor; });
+            refreshChart('chartLine', 'line', {
+                labels: months,
+                datasets: [{ label: 'Valor Glosado', data: lineData, borderColor: '#1e3a8a', tension: 0.4, fill: true, backgroundColor: 'rgba(30, 58, 138, 0.05)', pointBackgroundColor: '#60a5fa' }]
+            });
+
+            const colabMap = data.reduce((acc, curr) => { acc[curr.colaborador] = (acc[curr.colaborador] || 0) + curr.valor; return acc; }, {});
+            colaboradorRanking = Object.entries(colabMap)
+                .map(([nome, valor]) => ({ nome, valor }))
+                .sort((a, b) => b.valor - a.valor);
+            colaboradorRankingPage = 1;
+            renderColaboradorRankingTable();
+
+            // chartCompare original: Glosado vs Acatado
+            const glosadoData = convs.map(c => data.filter(g => g.convenio === c).reduce((a, b) => a + b.valor, 0));
+            refreshChart('chartCompare', 'bar', {
+                labels: convs,
+                datasets: [
+                    { label: 'Total Glosado', data: glosadoData, backgroundColor: '#172554', borderRadius: 5 },
+                    { label: 'Total Acatado', data: acatadoPorConv, backgroundColor: '#3b82f6', borderRadius: 5 }
+                ]
+            });
+
+            const ticketMap = convs.map(c => {
+                const registros = data.filter(g => g.convenio === c);
+                return registros.length > 0 ? (registros.reduce((a, b) => a + b.valor, 0) / registros.length).toFixed(2) : 0;
+            });
+            refreshChart('chartTicket', 'polarArea', {
+                labels: convs,
+                datasets: [{ data: ticketMap, backgroundColor: ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'] }]
+            });
+
+            const uniMap = data.reduce((acc, curr) => { acc[curr.unidade] = (acc[curr.unidade] || 0) + curr.valor; return acc; }, {});
+            unidadeRanking = Object.entries(uniMap)
+                .map(([nome, valor]) => ({ nome, valor }))
+                .sort((a, b) => b.valor - a.valor);
+            unidadeRankingPage = 1;
+            renderUnidadeRankingTable();
+        }
+
+        function refreshChart(id, type, data, options = {}) {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+
+            const wrapper = canvas.parentElement;
+            const datasets = Array.isArray(data?.datasets) ? data.datasets : [];
+            const hasMeaningfulData = datasets.some(ds =>
+                Array.isArray(ds?.data) &&
+                ds.data.some(v => Number.isFinite(Number(v)) && Number(v) !== 0)
+            );
+
+            if (!hasMeaningfulData) {
+                if (instances[id]) {
+                    instances[id].destroy();
+                    delete instances[id];
+                }
+                if (wrapper) wrapper.style.display = 'none';
+                return;
+            }
+
+            if (wrapper) wrapper.style.display = '';
+            if (instances[id]) instances[id].destroy();
+            instances[id] = new Chart(canvas, {
+                type, data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type === 'doughnut' || type === 'polarArea' } }, ...options }
+            });
+        }
+
+        function changeColaboradorRankingPage(direction) {
+            const totalPages = Math.max(1, Math.ceil(colaboradorRanking.length / colaboradorRankingPageSize));
+            colaboradorRankingPage = Math.min(totalPages, Math.max(1, colaboradorRankingPage + direction));
+            renderColaboradorRankingTable();
+        }
+
+        function renderColaboradorRankingTable() {
+            const body = document.getElementById('colaborador-ranking-body');
+            const info = document.getElementById('colab-page-info');
+            const prevBtn = document.getElementById('colab-prev');
+            const nextBtn = document.getElementById('colab-next');
+            if (!body || !info || !prevBtn || !nextBtn) return;
+
+            const totalItems = colaboradorRanking.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / colaboradorRankingPageSize));
+            if (colaboradorRankingPage > totalPages) colaboradorRankingPage = totalPages;
+
+            const start = (colaboradorRankingPage - 1) * colaboradorRankingPageSize;
+            const end = start + colaboradorRankingPageSize;
+            const pageItems = colaboradorRanking.slice(start, end);
+            const maxValor = colaboradorRanking[0]?.valor || 0;
+
+            body.innerHTML = '';
+
+            if (pageItems.length === 0) {
+                body.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
+            } else {
+                pageItems.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    const posicao = start + index + 1;
+                    const pct = maxValor > 0 ? (item.valor / maxValor) * 100 : 0;
+                    tr.innerHTML = `
+                        <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
+                        <td class="p-3 font-bold text-slate-700">${item.nome}</td>
+                        <td class="p-3">
+                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-600 rounded-full" style="width:${pct.toFixed(1)}%"></div>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    `;
+                    body.appendChild(tr);
+                });
+            }
+
+            info.innerText = `Página ${colaboradorRankingPage} de ${totalPages}`;
+            prevBtn.disabled = colaboradorRankingPage <= 1;
+            nextBtn.disabled = colaboradorRankingPage >= totalPages;
+        }
+
+        function changeUnidadeRankingPage(direction) {
+            const totalPages = Math.max(1, Math.ceil(unidadeRanking.length / unidadeRankingPageSize));
+            unidadeRankingPage = Math.min(totalPages, Math.max(1, unidadeRankingPage + direction));
+            renderUnidadeRankingTable();
+        }
+
+        function renderUnidadeRankingTable() {
+            const body = document.getElementById('unidade-ranking-body');
+            const info = document.getElementById('uni-page-info');
+            const prevBtn = document.getElementById('uni-prev');
+            const nextBtn = document.getElementById('uni-next');
+            if (!body || !info || !prevBtn || !nextBtn) return;
+
+            const totalItems = unidadeRanking.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / unidadeRankingPageSize));
+            if (unidadeRankingPage > totalPages) unidadeRankingPage = totalPages;
+
+            const start = (unidadeRankingPage - 1) * unidadeRankingPageSize;
+            const end = start + unidadeRankingPageSize;
+            const pageItems = unidadeRanking.slice(start, end);
+            const maxValor = unidadeRanking[0]?.valor || 0;
+
+            body.innerHTML = '';
+
+            if (pageItems.length === 0) {
+                body.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
+            } else {
+                pageItems.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    const posicao = start + index + 1;
+                    const pct = maxValor > 0 ? (item.valor / maxValor) * 100 : 0;
+                    tr.innerHTML = `
+                        <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
+                        <td class="p-3 font-bold text-slate-700">${item.nome}</td>
+                        <td class="p-3">
+                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-600 rounded-full" style="width:${pct.toFixed(1)}%"></div>
+                            </div>
+                        </td>
+                        <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    `;
+                    body.appendChild(tr);
+                });
+            }
+
+            info.innerText = `Página ${unidadeRankingPage} de ${totalPages}`;
+            prevBtn.disabled = unidadeRankingPage <= 1;
+            nextBtn.disabled = unidadeRankingPage >= totalPages;
+        }
+
+        // ================= TABELA GLOSAS ================= //
+        function changeDadosPage(direction) {
+            const totalItems = glosas.filter(g => {
+                const searchQuery = normalizeString(document.getElementById('table-search').value);
+                const filterConv = document.getElementById('table-filter-conv').value;
+                const filterUni = document.getElementById('table-filter-uni').value;
+                const matchSearch = normalizeString(g.paciente).includes(searchQuery) || normalizeString(g.lote).includes(searchQuery);
+                const matchConv = filterConv === "" || g.convenio === filterConv;
+                const matchUni = filterUni === "" || g.unidade === filterUni;
+                return matchSearch && matchConv && matchUni;
+            }).length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / tablePageSize));
+            dadosPage = Math.min(totalPages, Math.max(1, dadosPage + direction));
+            renderTable();
+        }
+
+        function renderTable() {
+            const body = document.getElementById('table-body');
+            const searchQuery = normalizeString(document.getElementById('table-search').value);
+            const filterConv = document.getElementById('table-filter-conv').value;
+            const filterUni = document.getElementById('table-filter-uni').value;
+
+            body.innerHTML = '';
+            
+            const filteredData = glosas.filter(g => {
+                const matchSearch = normalizeString(g.paciente).includes(searchQuery) || normalizeString(g.lote).includes(searchQuery);
+                const matchConv = filterConv === "" || g.convenio === filterConv;
+                const matchUni = filterUni === "" || g.unidade === filterUni;
+                return matchSearch && matchConv && matchUni;
+            });
+
+            const sortedData = filteredData.sort((a,b) => new Date(b.data) - new Date(a.data));
+            const totalPages = Math.max(1, Math.ceil(sortedData.length / tablePageSize));
+            if (dadosPage > totalPages) dadosPage = totalPages;
+            if (dadosPage < 1) dadosPage = 1;
+            const start = (dadosPage - 1) * tablePageSize;
+            const pageData = sortedData.slice(start, start + tablePageSize);
+
+            pageData.forEach(g => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors group";
+                
+                let valorRender = g.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                if(g.status === 'Parcial') {
+                    valorRender += `<div class="text-[9px] text-orange-600 font-bold mt-1">Ac: ${g.valorParcial.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-5 font-bold text-slate-400 text-xs">${g.data.split('-').reverse().join('/')}</td>
+                    <td class="p-5">
+                        <div class="font-black text-navy-900 uppercase text-xs">${g.convenio}</div>
+                        <div class="text-[10px] text-blue-500 font-bold uppercase tracking-tighter">${g.unidade}</div>
+                    </td>
+                    <td class="p-5">
+                        <div class="text-slate-700 font-bold">${g.paciente}</div>
+                        <div class="text-[9px] bg-slate-100 px-2 inline-block rounded font-black text-slate-500 font-mono">ID: ${g.lote}</div>
+                    </td>
+                    <td class="p-5 text-slate-500 text-[11px] font-bold">
+                        <i class="fas fa-user-circle mr-1 opacity-50"></i>${g.colaborador}
+                    </td>
+                    <td class="p-5 font-black text-navy-900 text-right">${valorRender}</td>
+                    <td class="p-5 text-center">
+                        <span class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase border-2 shadow-sm ${getStatusClass(g.status)}">${g.status}</span>
+                    </td>
+                    <td class="p-5 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="openObsModal(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center ${g.obs ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'text-slate-300 hover:bg-slate-100'} transition-all"><i class="fas ${g.obs ? 'fa-comment-dots' : 'fa-comment'}"></i></button>
+                            <button onclick="editRecord(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-navy-900 hover:text-white transition-all"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteRecord(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+
+            const prevBtn = document.getElementById('dados-prev');
+            const nextBtn = document.getElementById('dados-next');
+            const info = document.getElementById('dados-page-info');
+            if (prevBtn && nextBtn && info) {
+                prevBtn.disabled = dadosPage <= 1;
+                nextBtn.disabled = dadosPage >= totalPages;
+                info.innerText = `Página ${dadosPage} de ${totalPages}`;
+            }
+        }
+
+        function getStatusClass(s) {
+            const config = { 
+                "A contestar": "bg-yellow-50 text-yellow-700 border-yellow-200", 
+                "Contestado": "bg-blue-50 text-blue-700 border-blue-200", 
+                "Acatado": "bg-green-50 text-green-700 border-green-200", 
+                "Parcial": "bg-orange-50 text-orange-700 border-orange-200", 
+                "Perdido": "bg-red-50 text-red-700 border-red-200" 
+            };
+            return config[s] || "";
+        }
+
+        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
+        
+        function openRecordModal() { 
+            document.getElementById('record-form').reset(); 
+            document.getElementById('reg-id').value = '';
+            document.getElementById('modal-title').innerText = "Novo Lançamento";
+            toggleParcial();
+            document.getElementById('modal-record').classList.add('active'); 
+        }
+
+        function saveRecord(e) {
+            e.preventDefault();
+            const id = document.getElementById('reg-id').value;
+            const status = document.getElementById('reg-status').value;
+            const valorParcial = status === 'Parcial' ? (parseFloat(document.getElementById('reg-valor-parcial').value) || 0) : 0;
+
+            const data = {
+                id: id ? parseInt(id) : Date.now(),
+                data: document.getElementById('reg-data').value,
+                lote: document.getElementById('reg-lote').value,
+                convenio: document.getElementById('reg-convenio').value,
+                unidade: document.getElementById('reg-unidade').value,
+                colaborador: document.getElementById('reg-colaborador').value,
+                paciente: document.getElementById('reg-paciente').value,
+                valor: parseFloat(document.getElementById('reg-valor').value),
+                status: status,
+                valorParcial: valorParcial,
+                obs: id ? glosas.find(g => g.id == id).obs : ""
+            };
+            if(id) glosas = glosas.map(g => g.id == id ? data : g); else glosas.push(data);
+            persistDataToFirebase();
+            closeModals(); renderTable(); updateDashboard();
+        }
+
+        function deleteRecord(id) { if(confirm("Confirmar exclusão definitiva do registro?")) { glosas = glosas.filter(g => g.id !== id); persistDataToFirebase(); renderTable(); updateDashboard(); } }
+        
+        function editRecord(id) {
+            const g = glosas.find(x => x.id == id);
+            document.getElementById('reg-id').value = g.id;
+            document.getElementById('reg-data').value = g.data;
+            document.getElementById('reg-lote').value = g.lote;
+            document.getElementById('reg-convenio').value = g.convenio;
+            document.getElementById('reg-unidade').value = g.unidade;
+            document.getElementById('reg-paciente').value = g.paciente;
+            document.getElementById('reg-colaborador').value = g.colaborador;
+            document.getElementById('reg-valor').value = g.valor;
+            document.getElementById('reg-status').value = g.status;
+            
+            toggleParcial();
+            if(g.status === 'Parcial') document.getElementById('reg-valor-parcial').value = g.valorParcial;
+
+            document.getElementById('modal-title').innerText = "Editar Lançamento";
+            document.getElementById('modal-record').classList.add('active');
+        }
+
+        function openObsModal(id) {
+            const g = glosas.find(x => x.id == id);
+            document.getElementById('obs-id').value = g.id;
+            document.getElementById('obs-text').value = g.obs;
+            document.getElementById('modal-obs').classList.add('active');
+        }
+
+        function saveObservation() {
+            const id = document.getElementById('obs-id').value;
+            glosas = glosas.map(g => g.id == id ? {...g, obs: document.getElementById('obs-text').value} : g);
+            persistDataToFirebase();
+            closeModals(); renderTable();
+        }
+
+        // ================= ABA PAGOS (LIVRO CAIXA) ================= //
+        function changePagosPage(direction) {
+            const totalPages = Math.max(1, Math.ceil(pagamentos.length / tablePageSize));
+            pagosPage = Math.min(totalPages, Math.max(1, pagosPage + direction));
+            renderPagosTable();
+        }
+
+        function renderPagosTable() {
+            const body = document.getElementById('table-pagos-body');
+            body.innerHTML = '';
+            
+            const pagosOrder = [...pagamentos].sort((a,b) => new Date(b.data) - new Date(a.data));
+            const totalPages = Math.max(1, Math.ceil(pagosOrder.length / tablePageSize));
+            if (pagosPage > totalPages) pagosPage = totalPages;
+            if (pagosPage < 1) pagosPage = 1;
+            const start = (pagosPage - 1) * tablePageSize;
+            const pageData = pagosOrder.slice(start, start + tablePageSize);
+
+            pageData.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors group";
+                tr.innerHTML = `
+                    <td class="p-5 font-bold text-slate-400 text-xs">${p.data.split('-').reverse().join('/')}</td>
+                    <td class="p-5 font-black text-navy-900 uppercase text-xs">${p.convenio}</td>
+                    <td class="p-5 font-black text-green-700 text-right text-base">${p.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td class="p-5 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="editPagamento(${p.id})" class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-green-700 hover:text-white transition-all"><i class="fas fa-edit"></i></button>
+                            <button onclick="deletePagamento(${p.id})" class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+
+            const prevBtn = document.getElementById('pagos-prev');
+            const nextBtn = document.getElementById('pagos-next');
+            const info = document.getElementById('pagos-page-info');
+            if (prevBtn && nextBtn && info) {
+                prevBtn.disabled = pagosPage <= 1;
+                nextBtn.disabled = pagosPage >= totalPages;
+                info.innerText = `Página ${pagosPage} de ${totalPages}`;
+            }
+        }
+
+        function openPagosModal() {
+            document.getElementById('pagos-form').reset();
+            document.getElementById('pago-id').value = '';
+            document.getElementById('modal-pagos-title').innerText = "Registrar Depósito";
+            document.getElementById('modal-pagos').classList.add('active');S
+        }
+
+        function savePagamento(e) {
+            e.preventDefault();
+            const id = document.getElementById('pago-id').value;
+            const data = {
+                id: id ? parseInt(id) : Date.now(),
+                data: document.getElementById('pago-data').value,
+                convenio: document.getElementById('pago-convenio').value,
+                valor: parseFloat(document.getElementById('pago-valor').value)
+            };
+            if(id) pagamentos = pagamentos.map(p => p.id == id ? data : p); else pagamentos.push(data);
+            persistDataToFirebase();
+            closeModals(); renderPagosTable(); updateDashboard();
+        }
+
+        function deletePagamento(id) { 
+            if(confirm("Deseja apagar este registro financeiro? O indicador de conciliação será afetado.")) { 
+                pagamentos = pagamentos.filter(p => p.id !== id); 
+                persistDataToFirebase();
+                renderPagosTable(); 
+                updateDashboard(); 
+            } 
+        }
+        
+        function editPagamento(id) {
+            const p = pagamentos.find(x => x.id == id);
+            document.getElementById('pago-id').value = p.id;
+            document.getElementById('pago-data').value = p.data;
+            document.getElementById('pago-convenio').value = p.convenio;
+            document.getElementById('pago-valor').value = p.valor;
+            document.getElementById('modal-pagos-title').innerText = "Editar Depósito";
+            document.getElementById('modal-pagos').classList.add('active');
+        }
+
+
+        // ================= CONFIGURAÇÕES E LISTAS ================= //
+        function updateDropdownsUI() {
+            const fill = (cls, key, all = false) => {
+                document.querySelectorAll(`.${cls}`).forEach(s => {
+                    const val = s.value;
+                    const options = (all ? `<option value="">${cls.includes('convenio') ? 'Todos os Convênios' : cls.includes('unidade') ? 'Todas as Unidades' : 'Todos os Colaboradores'}</option>` : '');
+                    s.innerHTML = options + listas[key].map(i => `<option value="${i}">${i}</option>`).join('');
+                    if(val) s.value = val;
+                });
+            };
+            fill('dynamic-select-convenio', 'convenios', true);
+            fill('dynamic-select-unidade', 'unidades', true);
+            fill('dynamic-select-colaborador', 'colaboradores', true);
+        }
+
+        function openManageListsModal() { renderListManager(); document.getElementById('modal-lists').classList.add('active'); }
+        
+        function renderListManager() {
+            const key = document.getElementById('list-selector').value;
+            document.getElementById('list-items-container').innerHTML = listas[key].map((item, idx) => `
+                <li class="p-4 flex justify-between items-center text-xs font-black uppercase tracking-widest text-slate-600">
+                    ${item}
+                    <button onclick="removeListItem('${key}', ${idx})" class="h-8 w-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
+                </li>
+            `).join('');
+        }
+
+        function addListItem() {
+            const key = document.getElementById('list-selector').value;
+            if (key === 'colaboradores') return;
+            const val = document.getElementById('new-list-item').value.trim();
+            if(val && !listas[key].includes(val)) { listas[key].push(val); persistDataToFirebase(); document.getElementById('new-list-item').value = ''; renderListManager(); updateDropdownsUI(); }
+        }
+
+        function removeListItem(key, idx) {
+            if (key === 'colaboradores') return;
+            listas[key].splice(idx, 1);
+            persistDataToFirebase();
+            renderListManager();
+            updateDropdownsUI();
+        }
+
+        // ================= BACKUP ================= //
+        function downloadBackup() {
+            const payload = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                listas,
+                glosas,
+                pagamentos
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const dateTag = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `glosamaster-backup-${dateTag}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function uploadBackup() {
+            const input = document.getElementById('backup-file-input');
+            const file = input.files[0];
+            if (!file) {
+                alert("Selecione um arquivo de backup para continuar.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+
+                    if (!data || typeof data !== 'object') throw new Error("Arquivo inválido.");
+                    if (!data.listas || !data.glosas || !data.pagamentos) throw new Error("Estrutura de backup incompleta.");
+                    if (!Array.isArray(data.listas.convenios) || !Array.isArray(data.listas.unidades) || !Array.isArray(data.listas.colaboradores)) {
+                        throw new Error("Listas inválidas no backup.");
+                    }
+                    if (!Array.isArray(data.glosas) || !Array.isArray(data.pagamentos)) throw new Error("Dados de glosas/pagamentos inválidos.");
+
+                    const confirmReplace = confirm("Este processo vai substituir TODOS os dados atuais. Deseja continuar?");
+                    if (!confirmReplace) return;
+
+                    listas = data.listas;
+                    glosas = data.glosas;
+                    pagamentos = data.pagamentos;
+                    await loadColaboradoresFromAPI();
+                    persistDataToFirebase();
+
+                    updateDropdownsUI();
+                    renderTable();
+                    renderPagosTable();
+                    updateDashboard();
+                    input.value = '';
+                    alert("Backup carregado com sucesso. Todos os dados foram substituídos.");
+                } catch (error) {
+                    alert(`Falha ao carregar backup: ${error.message}`);
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
