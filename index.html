@@ -118,7 +118,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-600" title="Valor total das glosas registradas no período selecionado">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total Glosado</p>
                     <p id="kpi-total" class="text-xl font-black text-navy-900 mt-1">R$ 0,00</p>
@@ -147,19 +147,19 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-pie text-blue-500"></i> Proporção Conciliação - Geral</h3>
                     <div class="h-72 relative"><canvas id="chartConciliacaoPie"></canvas></div>
                 </div>
-                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="lg:col-span-2 xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-bar text-blue-500"></i> Acatado vs Pago Efetivo (Por Convênio) - Geral</h3>
                     <div class="h-72 relative"><canvas id="chartConciliacaoBar"></canvas></div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
+                <div class="lg:col-span-2 xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-line text-blue-500"></i> Evolução Temporal de Glosas</h3>
                     <div class="h-72 relative"><canvas id="chartLine"></canvas></div>
                 </div>
@@ -168,9 +168,23 @@
                     <div class="h-72 relative"><canvas id="chartStatus"></canvas></div>
                 </div>
             </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-balance-scale text-blue-500"></i> Glosado vs Acatado (Convênios)</h3>
+                    <div class="h-72 relative"><canvas id="chartCompare"></canvas></div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-tags text-blue-500"></i> Ticket Médio por Convênio</h3>
+                    <div class="h-72 relative"><canvas id="chartTicket"></canvas></div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-pie text-blue-500"></i> Participação por Motivo de Glosa</h3>
+                    <div class="h-72 relative"><canvas id="chartMotivoDonut"></canvas></div>
+                </div>
+            </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
+                <div class="lg:col-span-2 xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-line text-blue-500"></i> Glosas Perdidas</h3>
                     <div class="h-72 relative"><canvas id="chartPerdidasLine"></canvas></div>
                 </div>
@@ -180,18 +194,8 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-balance-scale text-blue-500"></i> Glosado vs Acatado (Convênios)</h3>
-                    <div class="h-72 relative"><canvas id="chartCompare"></canvas></div>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-tags text-blue-500"></i> Ticket Médio por Convênio</h3>
-                    <div class="h-72 relative"><canvas id="chartTicket"></canvas></div>
-                </div>
-            </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-user-md text-blue-500"></i> Ranking de Glosa por Colaborador</h3>
                     <div class="h-72 flex flex-col">
@@ -237,6 +241,22 @@
                             <button id="uni-next" onclick="changeUnidadeRankingPage(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-6">
+                <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-list-ol text-blue-500"></i> Ranking de Volume de Glosas por Motivo</h3>
+                <div class="overflow-auto border border-slate-100 rounded-xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-[0.15em] font-black sticky top-0">
+                            <tr>
+                                <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
+                                <th class="p-3 border-b border-slate-200">Motivo</th>
+                                <th class="p-3 border-b border-slate-200">Volume de Glosa</th>
+                                <th class="p-3 border-b border-slate-200 text-right w-36">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="motivo-ranking-body" class="text-sm divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -399,7 +419,7 @@
                 </div>
                 <button onclick="closeModals()" class="h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <form id="record-form" onsubmit="saveRecord(event)" class="p-10 grid grid-cols-2 gap-6">
+            <form id="record-form" onsubmit="saveRecord(event)" class="p-10 grid grid-cols-3 gap-6">
                 <input type="hidden" id="reg-id">
                 <div class="col-span-1">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Data da Ocorrência</label>
@@ -418,18 +438,23 @@
                     <select id="reg-unidade" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm dynamic-select-unidade"></select>
                 </div>
                 <div class="col-span-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Motivo de Glosa</label>
+                    <select id="reg-motivo" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm dynamic-select-motivos"></select>
+                </div>
+                <div class="col-span-2">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Nome Completo do Paciente</label>
                     <input type="text" id="reg-paciente" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm">
                 </div>
                 <div class="col-span-1">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Colaborador Responsável</label>
-                    <select id="reg-colaborador" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm dynamic-select-colaborador"></select>
+                    <input list="reg-colaborador-list" id="reg-colaborador" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm" placeholder="Digite para buscar...">
+                    <datalist id="reg-colaborador-list"></datalist>
                 </div>
                 <div class="col-span-1">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Valor da Glosa (R$)</label>
                     <input type="number" id="reg-valor" step="0.01" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm font-bold text-navy-900">
                 </div>
-                <div class="col-span-2">
+                <div class="col-span-1">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Status do Processo</label>
                     <select id="reg-status" required onchange="toggleParcial()" class="w-full border-slate-200 rounded-xl py-3 shadow-sm font-bold text-slate-700 focus:ring-blue-500">
                         <option value="A contestar">A contestar</option>
@@ -439,14 +464,18 @@
                         <option value="Perdido">Perdido</option>
                     </select>
                 </div>
+                <div class="col-span-3">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Contestação</label>
+                    <textarea id="reg-contestacao" rows="4" class="w-full border-slate-200 rounded-xl p-4 shadow-sm text-sm" placeholder="Adicione observações sobre a contestação ou justificativa do motivo..."></textarea>
+                </div>
                 
-                <div class="col-span-2 hidden bg-orange-50 p-4 rounded-xl border border-orange-200" id="box-valor-parcial">
+                <div class="col-span-3 hidden bg-orange-50 p-4 rounded-xl border border-orange-200" id="box-valor-parcial">
                     <label class="block text-[10px] font-black text-orange-800 uppercase mb-2">Valor Parcial Acatado/Pago (R$)</label>
                     <input type="number" id="reg-valor-parcial" step="0.01" class="w-full border-orange-300 rounded-xl py-3 shadow-sm text-orange-900 font-bold focus:ring-orange-500" placeholder="0.00">
                     <p class="text-[9px] text-orange-700 mt-2 uppercase tracking-widest font-bold"><i class="fas fa-exclamation-triangle mr-1"></i>A diferença em relação ao valor da glosa será declarada como PERDIDA.</p>
                 </div>
 
-                <div class="col-span-2 mt-6 flex gap-4">
+                <div class="col-span-3 mt-6 flex gap-4">
                     <button type="submit" class="flex-1 bg-navy-900 text-white font-black py-4 rounded-2xl hover:bg-blue-600 shadow-xl transition-all uppercase tracking-widest text-xs">Confirmar Lançamento</button>
                     <button type="button" onclick="closeModals()" class="px-8 py-4 border-2 border-slate-100 rounded-2xl font-black text-slate-400 hover:bg-slate-50 transition-all text-xs uppercase tracking-widest">Cancelar</button>
                 </div>
@@ -484,6 +513,33 @@
         </div>
     </div>
 
+    <div id="modal-contestacao" class="modal fixed inset-0 bg-navy-900/90 backdrop-blur-md z-[100] justify-center items-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="bg-navy-900 p-6 text-white flex justify-between items-center">
+                <div>
+                    <h3 class="font-black uppercase text-sm tracking-widest">Motivo de Glosa e Contestação</h3>
+                    <p class="text-[10px] text-blue-200 font-bold uppercase tracking-widest">Apenas motivo e contestação</p>
+                </div>
+                <button onclick="closeModals()" class="h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="contestacao-form" onsubmit="saveContestacao(event)" class="p-8 grid grid-cols-1 gap-6">
+                <input type="hidden" id="contestacao-id">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Motivo de Glosa</label>
+                    <select id="contestacao-motivo" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm dynamic-select-motivos"></select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Contestação</label>
+                    <textarea id="contestacao-text" rows="5" class="w-full border-slate-200 rounded-2xl p-4 shadow-sm text-sm" placeholder="Descreva a contestação ou justificativa do motivo..."></textarea>
+                </div>
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 shadow-xl transition-all uppercase tracking-widest text-xs">Salvar Contestação</button>
+                    <button type="button" onclick="closeModals()" class="px-8 py-4 border-2 border-slate-100 rounded-2xl font-black text-slate-400 hover:bg-slate-50 transition-all text-xs uppercase tracking-widest">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="modal-obs" class="modal fixed inset-0 bg-navy-900/90 backdrop-blur-md z-[100] justify-center items-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
             <div class="bg-navy-900 p-6 text-white flex justify-between items-center">
@@ -508,6 +564,7 @@
                 <select id="list-selector" onchange="renderListManager()" class="w-full border-slate-200 rounded-xl mb-6 font-black text-navy-900 uppercase text-xs tracking-widest bg-slate-50">
                     <option value="convenios">CONVÊNIOS</option>
                     <option value="unidades">UNIDADES</option>
+                    <option value="motivos">MOTIVOS DE GLOSA</option>
                 </select>
                 <div class="flex gap-2 mb-6">
                     <input type="text" id="new-list-item" class="flex-1 border-slate-200 rounded-xl shadow-sm text-sm" placeholder="Nome do item...">
@@ -523,17 +580,26 @@
         let listas = {
             convenios: ["Unimed", "Amil", "Bradesco Saúde", "Sulamérica", "Casssi", "Saúde Caixa"],
             unidades: ["Hospital Central", "Pronto Socorro Oeste", "Unidade Diagnóstico", "Filial Litoral"],
-            colaboradores: ["Dr. Carlos Auditori", "Dra. Helena Souza", "Ricardo Gestão", "Amanda Recurso"]
+            colaboradores: ["Dr. Carlos Auditori", "Dra. Helena Souza", "Ricardo Gestão", "Amanda Recurso"],
+            motivos: [
+                "Não informado",
+                "Cobertura não prevista",
+                "Código incorreto",
+                "Documentação incompleta",
+                "Duplicidade de cobrança",
+                "Falta de autorização",
+                "Procedimento divergente"
+            ]
         };
 
-        // Adicionado "valorParcial" à estrutura de glosas
+        // Adicionado "valorParcial", "motivo" e "contestacao" à estrutura de glosas
         let glosas = [
-            { id: 1, data: "2026-01-10", convenio: "Unimed", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "João Silva", lote: "L-100", valor: 1500.00, status: "Acatado", valorParcial: 0, obs: "" },
-            { id: 2, data: "2026-02-15", convenio: "Amil", unidade: "Pronto Socorro Oeste", colaborador: "Dra. Helena Souza", paciente: "Ana Souza", lote: "L-101", valor: 2800.00, status: "A contestar", valorParcial: 0, obs: "Falta carimbo legível no prontuário" },
-            { id: 3, data: "2026-03-05", convenio: "Unimed", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "Beto Lima", lote: "L-102", valor: 900.00, status: "Perdido", valorParcial: 0, obs: "Prazo de recurso expirado pelo sistema" },
-            { id: 4, data: "2026-04-20", convenio: "Bradesco Saúde", unidade: "Unidade Diagnóstico", colaborador: "Ricardo Gestão", paciente: "Clara Luz", lote: "L-103", valor: 3500.00, status: "Contestado", valorParcial: 0, obs: "" },
-            { id: 5, data: "2026-01-25", convenio: "Bradesco Saúde", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "Maria Eduarda", lote: "L-104", valor: 1200.00, status: "Acatado", valorParcial: 0, obs: "" },
-            { id: 6, data: "2026-02-10", convenio: "Sulamérica", unidade: "Filial Litoral", colaborador: "Amanda Recurso", paciente: "Roberto Justos", lote: "L-105", valor: 2000.00, status: "Parcial", valorParcial: 1200.00, obs: "" }
+            { id: 1, data: "2026-01-10", convenio: "Unimed", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "João Silva", lote: "L-100", valor: 1500.00, status: "Acatado", valorParcial: 0, motivo: "Procedimento divergente", contestacao: "", obs: "" },
+            { id: 2, data: "2026-02-15", convenio: "Amil", unidade: "Pronto Socorro Oeste", colaborador: "Dra. Helena Souza", paciente: "Ana Souza", lote: "L-101", valor: 2800.00, status: "A contestar", valorParcial: 0, motivo: "Documentação incompleta", contestacao: "", obs: "Falta carimbo legível no prontuário" },
+            { id: 3, data: "2026-03-05", convenio: "Unimed", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "Beto Lima", lote: "L-102", valor: 900.00, status: "Perdido", valorParcial: 0, motivo: "Cobertura não prevista", contestacao: "", obs: "Prazo de recurso expirado pelo sistema" },
+            { id: 4, data: "2026-04-20", convenio: "Bradesco Saúde", unidade: "Unidade Diagnóstico", colaborador: "Ricardo Gestão", paciente: "Clara Luz", lote: "L-103", valor: 3500.00, status: "Contestado", valorParcial: 0, motivo: "Falta de autorização", contestacao: "Recurso em andamento", obs: "" },
+            { id: 5, data: "2026-01-25", convenio: "Bradesco Saúde", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "Maria Eduarda", lote: "L-104", valor: 1200.00, status: "Acatado", valorParcial: 0, motivo: "Código incorreto", contestacao: "", obs: "" },
+            { id: 6, data: "2026-02-10", convenio: "Sulamérica", unidade: "Filial Litoral", colaborador: "Amanda Recurso", paciente: "Roberto Justos", lote: "L-105", valor: 2000.00, status: "Parcial", valorParcial: 1200.00, motivo: "Duplicidade de cobrança", contestacao: "", obs: "" }
         ];
 
         // Novo array para a aba de Pagos
@@ -550,6 +616,9 @@
         let unidadeRanking = [];
         let unidadeRankingPage = 1;
         const unidadeRankingPageSize = 8;
+        let motivoRanking = [];
+        let motivoRankingPage = 1;
+        const motivoRankingPageSize = 8;
         let dadosPage = 1;
         let pagosPage = 1;
         const tablePageSize = 20;
@@ -567,7 +636,7 @@
         const firebaseApp = firebase.initializeApp(firebaseConfig);
         const database = firebase.database(firebaseApp);
         const dbRootRef = database.ref('glosaAppData');
-        const initialChartIds = ['chartConciliacaoPie', 'chartConciliacaoBar', 'chartLine', 'chartStatus', 'chartPerdidasLine', 'chartPerdidasDonut', 'chartCompare', 'chartTicket'];
+        const initialChartIds = ['chartConciliacaoPie', 'chartConciliacaoBar', 'chartLine', 'chartStatus', 'chartPerdidasLine', 'chartPerdidasDonut', 'chartCompare', 'chartTicket', 'chartMotivoDonut'];
 
         window.onload = async () => {
             const yearInput = document.getElementById('dash-year');
@@ -649,7 +718,8 @@
                     listas = {
                         convenios: Array.isArray(payload.listas.convenios) ? payload.listas.convenios.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.convenios,
                         unidades: Array.isArray(payload.listas.unidades) ? payload.listas.unidades.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.unidades,
-                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores
+                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores,
+                        motivos: Array.isArray(payload.listas.motivos) ? payload.listas.motivos.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.motivos
                     };
                 }
                 if (Array.isArray(payload.glosas)) glosas = payload.glosas;
@@ -664,7 +734,8 @@
                         listas = {
                             convenios: Array.isArray(cached.listas.convenios) ? cached.listas.convenios.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.convenios,
                             unidades: Array.isArray(cached.listas.unidades) ? cached.listas.unidades.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.unidades,
-                            colaboradores: Array.isArray(cached.listas.colaboradores) ? cached.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores
+                            colaboradores: Array.isArray(cached.listas.colaboradores) ? cached.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores,
+                            motivos: Array.isArray(cached.listas.motivos) ? cached.listas.motivos.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.motivos
                         };
                     }
                     if (Array.isArray(cached.glosas)) glosas = cached.glosas;
@@ -699,7 +770,8 @@
                     listas = {
                         convenios: Array.isArray(payload.listas.convenios) ? payload.listas.convenios.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.convenios,
                         unidades: Array.isArray(payload.listas.unidades) ? payload.listas.unidades.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.unidades,
-                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores
+                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores,
+                        motivos: Array.isArray(payload.listas.motivos) ? payload.listas.motivos.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.motivos
                     };
                 }
                 if (Array.isArray(payload.glosas)) glosas = payload.glosas;
@@ -1010,6 +1082,17 @@
                 datasets: [{ data: Object.values(statusMap), backgroundColor: Object.keys(statusMap).map(k => statusConfig[k]), borderWeight: 0 }]
             }, { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } }, cutout: '70%' });
 
+            const motivoMap = data.reduce((acc, curr) => { const key = curr.motivo || 'Sem Motivo'; acc[key] = (acc[key] || 0) + curr.valor; return acc; }, {});
+            const motivoEntries = Object.entries(motivoMap).sort((a,b) => b[1] - a[1]);
+            const motivoLabels = motivoEntries.map(([label]) => label);
+            const motivoValues = motivoEntries.map(([, valor]) => valor);
+            const motivoColors = motivoLabels.map((_, idx) => ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#f97316', '#0ea5e9', '#ec4899'][idx % 7]);
+
+            refreshChart('chartMotivoDonut', 'doughnut', {
+                labels: motivoLabels,
+                datasets: [{ data: motivoValues, backgroundColor: motivoColors, borderWeight: 0 }]
+            }, { plugins: { legend: { position: 'bottom' } }, cutout: '70%' });
+
             const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
             const lineData = new Array(12).fill(0);
             data.forEach(g => { const m = new Date(g.data).getUTCMonth(); lineData[m] += g.valor; });
@@ -1067,6 +1150,44 @@
                 .sort((a, b) => b.valor - a.valor);
             unidadeRankingPage = 1;
             renderUnidadeRankingTable();
+
+            // Compute motivo ranking with volume count
+            const motivoVolumeMap = data.reduce((acc, curr) => {
+                const key = curr.motivo || 'Sem Motivo';
+                if (!acc[key]) acc[key] = { valor: 0, volume: 0 };
+                acc[key].valor += curr.valor;
+                acc[key].volume += 1;
+                return acc;
+            }, {});
+            motivoRanking = Object.entries(motivoVolumeMap)
+                .map(([nome, { valor, volume }]) => ({ nome, valor, volume }))
+                .sort((a, b) => b.valor - a.valor);
+            motivoRankingPage = 1;
+            renderMotivoRankingTable();
+        }
+
+        function renderMotivoRankingTable() {
+            const body = document.getElementById('motivo-ranking-body');
+            if (!body) return;
+
+            body.innerHTML = '';
+
+            if (!motivoRanking.length) {
+                body.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
+                return;
+            }
+
+            motivoRanking.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const posicao = index + 1;
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
+                    <td class="p-3 font-bold text-slate-700">${item.nome}</td>
+                    <td class="p-3">${item.volume}</td>
+                    <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                `;
+                body.appendChild(tr);
+            });
         }
 
         function updateTableFilters() {
@@ -1303,6 +1424,7 @@
                     <td class="p-5">
                         <div class="text-slate-700 font-bold">${g.paciente}</div>
                         <div class="text-[9px] bg-slate-100 px-2 inline-block rounded font-black text-slate-500 font-mono">ID: ${g.lote}</div>
+                        <div class="text-[10px] uppercase tracking-[0.15em] mt-2 text-slate-400">Motivo: ${g.motivo || 'Não informado'}</div>
                     </td>
                     <td class="p-5 text-slate-500 text-[11px] font-bold">
                         <i class="fas fa-user-circle mr-1 opacity-50"></i>${g.colaborador}
@@ -1313,6 +1435,7 @@
                     </td>
                     <td class="p-5 text-center">
                         <div class="flex justify-center gap-2">
+                            <button onclick="openContestModal(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center ${g.contestacao ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'text-slate-300 hover:bg-slate-100'} transition-all"><i class="fas fa-clipboard-list"></i></button>
                             <button onclick="openObsModal(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center ${g.obs ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'text-slate-300 hover:bg-slate-100'} transition-all"><i class="fas ${g.obs ? 'fa-comment-dots' : 'fa-comment'}"></i></button>
                             <button onclick="editRecord(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-navy-900 hover:text-white transition-all"><i class="fas fa-edit"></i></button>
                             <button onclick="deleteRecord(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
@@ -1349,6 +1472,8 @@
             document.getElementById('record-form').reset(); 
             document.getElementById('reg-id').value = '';
             document.getElementById('modal-title').innerText = "Novo Lançamento";
+            document.getElementById('reg-motivo').value = '';
+            document.getElementById('reg-contestacao').value = '';
             toggleParcial();
             document.getElementById('modal-record').classList.add('active'); 
         }
@@ -1357,7 +1482,18 @@
             e.preventDefault();
             const id = document.getElementById('reg-id').value;
             const status = document.getElementById('reg-status').value;
+            const colaborador = document.getElementById('reg-colaborador').value.trim();
+            const motivo = document.getElementById('reg-motivo').value;
             const valorParcial = status === 'Parcial' ? (parseFloat(document.getElementById('reg-valor-parcial').value) || 0) : 0;
+
+            if (!listas.colaboradores.includes(colaborador)) {
+                alert('Selecione um colaborador válido a partir da lista.');
+                return;
+            }
+            if (!listas.motivos.includes(motivo)) {
+                alert('Selecione um motivo de glosa válido.');
+                return;
+            }
 
             const data = {
                 id: id ? parseInt(id) : Date.now(),
@@ -1365,11 +1501,13 @@
                 lote: document.getElementById('reg-lote').value,
                 convenio: document.getElementById('reg-convenio').value,
                 unidade: document.getElementById('reg-unidade').value,
-                colaborador: document.getElementById('reg-colaborador').value,
+                colaborador: colaborador,
                 paciente: document.getElementById('reg-paciente').value,
                 valor: parseFloat(document.getElementById('reg-valor').value),
                 status: status,
                 valorParcial: valorParcial,
+                motivo: motivo,
+                contestacao: document.getElementById('reg-contestacao').value.trim(),
                 obs: id ? glosas.find(g => g.id == id).obs : ""
             };
             if(id) glosas = glosas.map(g => g.id == id ? data : g); else glosas.push(data);
@@ -1388,6 +1526,8 @@
             document.getElementById('reg-unidade').value = g.unidade;
             document.getElementById('reg-paciente').value = g.paciente;
             document.getElementById('reg-colaborador').value = g.colaborador;
+            document.getElementById('reg-motivo').value = g.motivo || '';
+            document.getElementById('reg-contestacao').value = g.contestacao || '';
             document.getElementById('reg-valor').value = g.valor;
             document.getElementById('reg-status').value = g.status;
             
@@ -1396,6 +1536,29 @@
 
             document.getElementById('modal-title').innerText = "Editar Lançamento";
             document.getElementById('modal-record').classList.add('active');
+        }
+
+        function openContestModal(id) {
+            const g = glosas.find(x => x.id == id);
+            if (!g) return;
+            document.getElementById('contestacao-id').value = g.id;
+            document.getElementById('contestacao-motivo').value = g.motivo || '';
+            document.getElementById('contestacao-text').value = g.contestacao || '';
+            document.getElementById('modal-contestacao').classList.add('active');
+        }
+
+        function saveContestacao(e) {
+            e.preventDefault();
+            const id = document.getElementById('contestacao-id').value;
+            const motivo = document.getElementById('contestacao-motivo').value;
+            const contestacao = document.getElementById('contestacao-text').value.trim();
+            if (!listas.motivos.includes(motivo)) {
+                alert('Selecione um motivo de glosa válido.');
+                return;
+            }
+            glosas = glosas.map(g => g.id == id ? {...g, motivo, contestacao} : g);
+            persistDataToFirebase();
+            closeModals(); renderTable(); updateDashboard();
         }
 
         function openObsModal(id) {
@@ -1461,7 +1624,7 @@
             document.getElementById('pagos-form').reset();
             document.getElementById('pago-id').value = '';
             document.getElementById('modal-pagos-title').innerText = "Registrar Depósito";
-            document.getElementById('modal-pagos').classList.add('active');S
+            document.getElementById('modal-pagos').classList.add('active');
         }
 
         function savePagamento(e) {
@@ -1500,17 +1663,27 @@
 
         // ================= CONFIGURAÇÕES E LISTAS ================= //
         function updateDropdownsUI() {
-            const fill = (cls, key, all = false) => {
+            const fillSelect = (cls, key, all = false) => {
+                const items = listas[key].slice().sort((a, b) => a.localeCompare(b, 'pt-BR'));
                 document.querySelectorAll(`.${cls}`).forEach(s => {
                     const val = s.value;
-                    const options = (all ? `<option value="">${cls.includes('convenio') ? 'Todos os Convênios' : cls.includes('unidade') ? 'Todas as Unidades' : 'Todos os Colaboradores'}</option>` : '');
-                    s.innerHTML = options + listas[key].map(i => `<option value="${i}">${i}</option>`).join('');
-                    if(val) s.value = val;
+                    const options = all ? `<option value="">${cls.includes('convenio') ? 'Todos os Convênios' : cls.includes('unidade') ? 'Todas as Unidades' : 'Todos os Colaboradores'}</option>` : '';
+                    s.innerHTML = options + items.map(i => `<option value="${i}">${i}</option>`).join('');
+                    if (val && items.includes(val)) s.value = val;
                 });
             };
-            fill('dynamic-select-convenio', 'convenios', true);
-            fill('dynamic-select-unidade', 'unidades', true);
-            fill('dynamic-select-colaborador', 'colaboradores', true);
+
+            const fillDatalist = (id, key) => {
+                const datalist = document.getElementById(id);
+                if (!datalist) return;
+                datalist.innerHTML = listas[key].slice().sort((a, b) => a.localeCompare(b, 'pt-BR')).map(i => `<option value="${i}"></option>`).join('');
+            };
+
+            fillSelect('dynamic-select-convenio', 'convenios', true);
+            fillSelect('dynamic-select-unidade', 'unidades', true);
+            fillSelect('dynamic-select-colaborador', 'colaboradores', true);
+            fillSelect('dynamic-select-motivos', 'motivos', false);
+            fillDatalist('reg-colaborador-list', 'colaboradores');
         }
 
         function openManageListsModal() { renderListManager(); document.getElementById('modal-lists').classList.add('active'); }
@@ -1518,9 +1691,12 @@
         function renderListManager() {
             const key = document.getElementById('list-selector').value;
             document.getElementById('list-items-container').innerHTML = listas[key].sort((a, b) => a.localeCompare(b, 'pt-BR')).map((item, idx) => `
-                <li class="p-4 flex justify-between items-center text-xs font-black uppercase tracking-widest text-slate-600">
-                    ${item}
-                    <button onclick="removeListItem('${key}', ${idx})" class="h-8 w-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
+                <li class="p-4 flex justify-between items-center text-xs font-black uppercase tracking-widest text-slate-600" id="list-item-${idx}">
+                    <span class="item-text">${item}</span>
+                    <div class="flex gap-2">
+                        <button onclick="editListItem('${key}', ${idx})" class="h-8 w-8 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition-all"><i class="fas fa-edit"></i></button>
+                        <button onclick="removeListItem('${key}', ${idx})" class="h-8 w-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
+                    </div>
                 </li>
             `).join('');
         }
@@ -1546,6 +1722,55 @@
             persistDataToFirebase();
             renderListManager();
             updateDropdownsUI();
+        }
+
+        function editListItem(key, idx) {
+            if (key === 'colaboradores') return;
+            const item = listas[key][idx];
+            const listItem = document.getElementById(`list-item-${idx}`);
+            const currentText = listItem.querySelector('.item-text').textContent;
+            
+            listItem.innerHTML = `
+                <input type="text" id="edit-input-${idx}" value="${currentText}" class="flex-1 px-3 py-2 border border-blue-300 rounded-lg text-sm font-bold text-slate-700 focus:ring-blue-500 focus:border-blue-500">
+                <div class="flex gap-2">
+                    <button onclick="saveListItem('${key}', ${idx})" class="h-8 w-8 rounded-lg bg-green-50 text-green-500 hover:bg-green-500 hover:text-white transition-all"><i class="fas fa-check"></i></button>
+                    <button onclick="cancelEdit('${key}', ${idx}, '${currentText.replace(/'/g, "\\'")}')" class="h-8 w-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-500 hover:text-white transition-all"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            
+            // Focar no input de edição
+            setTimeout(() => {
+                const input = document.getElementById(`edit-input-${idx}`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 50);
+        }
+
+        function saveListItem(key, idx) {
+            if (key === 'colaboradores') return;
+            const newValue = document.getElementById(`edit-input-${idx}`).value.trim();
+            
+            if (!newValue) {
+                alert('O nome não pode estar vazio.');
+                return;
+            }
+            
+            if (listas[key].includes(newValue) && listas[key][idx] !== newValue) {
+                alert('Este item já existe na lista.');
+                return;
+            }
+            
+            listas[key][idx] = newValue;
+            listas[key].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            persistDataToFirebase();
+            renderListManager();
+            updateDropdownsUI();
+        }
+
+        function cancelEdit(key, idx, originalValue) {
+            renderListManager();
         }
 
         // ================= BACKUP ================= //
