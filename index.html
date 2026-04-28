@@ -605,10 +605,44 @@
             }
         }
 
+        const LOCAL_CACHE_KEY = 'glosaAppDataCache';
+
+        function saveAppStateToLocalCache() {
+            try {
+                const cachePayload = { listas, glosas, pagamentos, updatedAt: new Date().toISOString() };
+                localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(cachePayload));
+            } catch (error) {
+                console.warn('Não foi possível salvar cache local.', error);
+            }
+        }
+
+        function clearAppLocalCache() {
+            try {
+                localStorage.removeItem(LOCAL_CACHE_KEY);
+            } catch (error) {
+                console.warn('Não foi possível limpar cache local.', error);
+            }
+        }
+
+        function loadAppStateFromLocalCache() {
+            try {
+                const raw = localStorage.getItem(LOCAL_CACHE_KEY);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (error) {
+                console.warn('Cache local inválido. Limpando cache.', error);
+                clearAppLocalCache();
+                return null;
+            }
+        }
+
         async function loadDataFromFirebase() {
             try {
                 const snapshot = await dbRootRef.get();
-                if (!snapshot.exists()) return;
+                if (!snapshot.exists()) {
+                    clearAppLocalCache();
+                    return;
+                }
 
                 const payload = snapshot.val() || {};
                 if (payload.listas && typeof payload.listas === 'object') {
@@ -620,16 +654,33 @@
                 }
                 if (Array.isArray(payload.glosas)) glosas = payload.glosas;
                 if (Array.isArray(payload.pagamentos)) pagamentos = payload.pagamentos;
+
+                saveAppStateToLocalCache();
             } catch (error) {
-                console.warn("Falha ao carregar dados do Firebase. Seguindo com dados locais.", error);
+                console.warn('Falha ao carregar dados do Firebase. Tentando fallback do cache local.', error);
+                const cached = loadAppStateFromLocalCache();
+                if (cached) {
+                    if (cached.listas && typeof cached.listas === 'object') {
+                        listas = {
+                            convenios: Array.isArray(cached.listas.convenios) ? cached.listas.convenios.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.convenios,
+                            unidades: Array.isArray(cached.listas.unidades) ? cached.listas.unidades.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.unidades,
+                            colaboradores: Array.isArray(cached.listas.colaboradores) ? cached.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores
+                        };
+                    }
+                    if (Array.isArray(cached.glosas)) glosas = cached.glosas;
+                    if (Array.isArray(cached.pagamentos)) pagamentos = cached.pagamentos;
+                }
             }
         }
 
         function persistDataToFirebase() {
             const payload = { listas, glosas, pagamentos, updatedAt: new Date().toISOString() };
-            dbRootRef.set(payload).catch(error => {
-                console.warn("Falha ao salvar dados no Firebase.", error);
-            });
+            dbRootRef.set(payload)
+                .then(() => saveAppStateToLocalCache())
+                .catch(error => {
+                    console.warn('Falha ao salvar dados no Firebase.', error);
+                    saveAppStateToLocalCache();
+                });
         }
 
         function refreshAllUI() {
@@ -654,6 +705,7 @@
                 if (Array.isArray(payload.glosas)) glosas = payload.glosas;
                 if (Array.isArray(payload.pagamentos)) pagamentos = payload.pagamentos;
 
+                saveAppStateToLocalCache();
                 await loadColaboradoresFromAPI();
                 refreshAllUI();
             }, error => {
