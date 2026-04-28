@@ -731,10 +731,14 @@
 
         function persistDataToFirebase() {
             const payload = { listas, glosas, pagamentos, updatedAt: new Date().toISOString() };
+            console.log('Salvando dados no Firebase:', payload);
             dbRootRef.set(payload)
-                .then(() => saveAppStateToLocalCache())
+                .then(() => {
+                    console.log('Dados salvos com sucesso no Firebase');
+                    saveAppStateToLocalCache();
+                })
                 .catch(error => {
-                    console.warn('Falha ao salvar dados no Firebase.', error);
+                    console.error('Falha ao salvar dados no Firebase:', error);
                     saveAppStateToLocalCache();
                 });
         }
@@ -751,6 +755,8 @@
             dbRootRef.on('value', async snapshot => {
                 if (!snapshot.exists()) return;
                 const payload = snapshot.val() || {};
+                console.log('Dados recebidos do Firebase:', payload);
+                
                 if (payload.listas && typeof payload.listas === 'object') {
                     listas = {
                         convenios: Array.isArray(payload.listas.convenios) ? payload.listas.convenios.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.convenios,
@@ -759,14 +765,20 @@
                         motivos: Array.isArray(payload.listas.motivos) ? payload.listas.motivos.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.motivos
                     };
                 }
-                if (Array.isArray(payload.glosas)) glosas = payload.glosas;
-                if (Array.isArray(payload.pagamentos)) pagamentos = payload.pagamentos;
+                if (Array.isArray(payload.glosas)) {
+                    console.log('Atualizando glosas:', payload.glosas.length, 'itens');
+                    glosas = payload.glosas;
+                }
+                if (Array.isArray(payload.pagamentos)) {
+                    console.log('Atualizando pagamentos:', payload.pagamentos.length, 'itens');
+                    pagamentos = payload.pagamentos;
+                }
 
                 saveAppStateToLocalCache();
                 await loadColaboradoresFromAPI();
                 refreshAllUI();
             }, error => {
-                console.warn("Falha na sincronização em tempo real com Firebase.", error);
+                console.error("Falha na sincronização em tempo real com Firebase.", error);
             });
         }
 
