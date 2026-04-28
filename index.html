@@ -455,7 +455,7 @@
                 </div>
                 <div class="col-span-1">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Status do Processo</label>
-                    <select id="reg-status" required onchange="toggleParcial()" class="w-full border-slate-200 rounded-xl py-3 shadow-sm font-bold text-slate-700 focus:ring-blue-500">
+                    <select id="reg-status" required onchange="toggleStatusFields()" class="w-full border-slate-200 rounded-xl py-3 shadow-sm font-bold text-slate-700 focus:ring-blue-500">
                         <option value="A contestar">A contestar</option>
                         <option value="Contestado">Contestado</option>
                         <option value="Acatado">Acatado</option>
@@ -466,6 +466,10 @@
                 <div class="col-span-3">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Contestação</label>
                     <textarea id="reg-contestacao" rows="4" class="w-full border-slate-200 rounded-xl p-4 shadow-sm text-sm" placeholder="Adicione observações sobre a contestação ou justificativa do motivo..."></textarea>
+                </div>
+                <div class="col-span-3 hidden" id="box-motivo-perdida">
+                    <label class="block text-[10px] font-black text-red-600 uppercase mb-2">Motivo da Perda (Obrigatório)</label>
+                    <textarea id="reg-motivo-perdida" rows="4" class="w-full border-red-200 rounded-xl p-4 shadow-sm text-sm" placeholder="Descreva detalhadamente o motivo pelo qual a glosa foi perdida..." required></textarea>
                 </div>
                 
                 <div class="col-span-3 hidden bg-orange-50 p-4 rounded-xl border border-orange-200" id="box-valor-parcial">
@@ -841,10 +845,18 @@
             document.getElementById('box-year').classList.toggle('hidden', type !== 'year');
         }
 
-        function toggleParcial() {
-            const isParcial = document.getElementById('reg-status').value === 'Parcial';
+        function toggleStatusFields() {
+            const status = document.getElementById('reg-status').value;
+            const isParcial = status === 'Parcial';
+            const isPerdido = status === 'Perdido';
+            
+            // Handle Parcial case
             document.getElementById('box-valor-parcial').classList.toggle('hidden', !isParcial);
             if(!isParcial) document.getElementById('reg-valor-parcial').value = '';
+            
+            // Handle Perdido case - show motivo da perda field
+            document.getElementById('box-motivo-perdida').classList.toggle('hidden', !isPerdido);
+            if(!isPerdido) document.getElementById('reg-motivo-perdida').value = '';
         }
 
         function matchesDashboardTimeFilter(dateValue) {
@@ -1530,7 +1542,8 @@
             document.getElementById('modal-title').innerText = "Novo Lançamento";
             document.getElementById('reg-motivo').value = '';
             document.getElementById('reg-contestacao').value = '';
-            toggleParcial();
+            document.getElementById('reg-motivo-perdida').value = '';
+            toggleStatusFields();
             document.getElementById('modal-record').classList.add('active'); 
         }
 
@@ -1551,6 +1564,10 @@
                 return;
             }
 
+            const contestacaoValue = document.getElementById('reg-contestacao').value.trim();
+            const motivoPerdidaValue = document.getElementById('reg-motivo-perdida').value.trim();
+            const existingRecord = id ? glosas.find(g => g.id == id) : null;
+            
             const data = {
                 id: id ? parseInt(id) : Date.now(),
                 data: document.getElementById('reg-data').value,
@@ -1563,8 +1580,8 @@
                 status: status,
                 valorParcial: valorParcial,
                 motivo: motivo,
-                contestacao: document.getElementById('reg-contestacao').value.trim(),
-                obs: id ? glosas.find(g => g.id == id).obs : ""
+                contestacao: contestacaoValue,
+                obs: motivoPerdidaValue
             };
             if(id) glosas = glosas.map(g => g.id == id ? data : g); else glosas.push(data);
             persistDataToFirebase();
@@ -1584,10 +1601,11 @@
             document.getElementById('reg-colaborador').value = g.colaborador;
             document.getElementById('reg-motivo').value = g.motivo || '';
             document.getElementById('reg-contestacao').value = g.contestacao || '';
+            document.getElementById('reg-motivo-perdida').value = g.obs || '';
             document.getElementById('reg-valor').value = g.valor;
             document.getElementById('reg-status').value = g.status;
             
-            toggleParcial();
+            toggleStatusFields();
             if(g.status === 'Parcial') document.getElementById('reg-valor-parcial').value = g.valorParcial;
 
             document.getElementById('modal-title').innerText = "Editar Lançamento";
