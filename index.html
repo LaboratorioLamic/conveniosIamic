@@ -469,7 +469,7 @@
                 </div>
                 <div class="col-span-3 hidden" id="box-motivo-perdida">
                     <label class="block text-[10px] font-black text-red-600 uppercase mb-2">Motivo da Perda (Obrigatório)</label>
-                    <textarea id="reg-motivo-perdida" rows="4" class="w-full border-red-200 rounded-xl p-4 shadow-sm text-sm" placeholder="Descreva detalhadamente o motivo pelo qual a glosa foi perdida..." required></textarea>
+                    <textarea id="reg-motivo-perdida" rows="4" class="w-full border-red-200 rounded-xl p-4 shadow-sm text-sm" placeholder="Descreva detalhadamente o motivo pelo qual a glosa foi perdida..."></textarea>
                 </div>
                 
                 <div class="col-span-3 hidden bg-orange-50 p-4 rounded-xl border border-orange-200" id="box-valor-parcial">
@@ -581,35 +581,17 @@
     <script>
         // Dados Iniciais
         let listas = {
-            convenios: ["Unimed", "Amil", "Bradesco Saúde", "Sulamérica", "Casssi", "Saúde Caixa"],
-            unidades: ["Hospital Central", "Pronto Socorro Oeste", "Unidade Diagnóstico", "Filial Litoral"],
-            colaboradores: ["Dr. Carlos Auditori", "Dra. Helena Souza", "Ricardo Gestão", "Amanda Recurso"],
-            motivos: [
-                "Não informado",
-                "Cobertura não prevista",
-                "Código incorreto",
-                "Documentação incompleta",
-                "Duplicidade de cobrança",
-                "Falta de autorização",
-                "Procedimento divergente"
-            ]
+            convenios: [],
+            unidades: [],
+            colaboradores: [],
+            motivos: []
         };
 
         // Adicionado "valorParcial", "motivo" e "contestacao" à estrutura de glosas
-        let glosas = [
-            { id: 1, data: "2026-01-10", convenio: "Unimed", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "João Silva", lote: "L-100", valor: 1500.00, status: "Acatado", valorParcial: 0, motivo: "Procedimento divergente", contestacao: "", obs: "" },
-            { id: 2, data: "2026-02-15", convenio: "Amil", unidade: "Pronto Socorro Oeste", colaborador: "Dra. Helena Souza", paciente: "Ana Souza", lote: "L-101", valor: 2800.00, status: "A contestar", valorParcial: 0, motivo: "Documentação incompleta", contestacao: "", obs: "Falta carimbo legível no prontuário" },
-            { id: 3, data: "2026-03-05", convenio: "Unimed", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "Beto Lima", lote: "L-102", valor: 900.00, status: "Perdido", valorParcial: 0, motivo: "Cobertura não prevista", contestacao: "", obs: "Prazo de recurso expirado pelo sistema" },
-            { id: 4, data: "2026-04-20", convenio: "Bradesco Saúde", unidade: "Unidade Diagnóstico", colaborador: "Ricardo Gestão", paciente: "Clara Luz", lote: "L-103", valor: 3500.00, status: "Contestado", valorParcial: 0, motivo: "Falta de autorização", contestacao: "Recurso em andamento", obs: "" },
-            { id: 5, data: "2026-01-25", convenio: "Bradesco Saúde", unidade: "Hospital Central", colaborador: "Dr. Carlos Auditori", paciente: "Maria Eduarda", lote: "L-104", valor: 1200.00, status: "Acatado", valorParcial: 0, motivo: "Código incorreto", contestacao: "", obs: "" },
-            { id: 6, data: "2026-02-10", convenio: "Sulamérica", unidade: "Filial Litoral", colaborador: "Amanda Recurso", paciente: "Roberto Justos", lote: "L-105", valor: 2000.00, status: "Parcial", valorParcial: 1200.00, motivo: "Duplicidade de cobrança", contestacao: "", obs: "" }
-        ];
+        let glosas = [];
 
         // Novo array para a aba de Pagos
-        let pagamentos = [
-            { id: 1, data: "2026-02-15", convenio: "Unimed", valor: 1500.00 },
-            { id: 2, data: "2026-03-10", convenio: "Bradesco Saúde", valor: 1200.00 }
-        ];
+        let pagamentos = [];
 
         const COLABORADORES_API_URL = "https://script.google.com/macros/s/AKfycbzUd6efhfzkCmYd88_eIIL6dGIQxIINsw-6Y_qM3PRemUbZ06obtF9xKY1S8WRfvXyq9Q/exec";
         let instances = {};
@@ -855,8 +837,15 @@
             if(!isParcial) document.getElementById('reg-valor-parcial').value = '';
             
             // Handle Perdido case - show motivo da perda field
+            const motivoPerdidaField = document.getElementById('reg-motivo-perdida');
             document.getElementById('box-motivo-perdida').classList.toggle('hidden', !isPerdido);
-            if(!isPerdido) document.getElementById('reg-motivo-perdida').value = '';
+            
+            if (isPerdido) {
+                motivoPerdidaField.setAttribute('required', 'required');
+            } else {
+                motivoPerdidaField.removeAttribute('required');
+                motivoPerdidaField.value = '';
+            }
         }
 
         function matchesDashboardTimeFilter(dateValue) {
