@@ -119,28 +119,28 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-600">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-600" title="Valor total das glosas registradas no período selecionado">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total Glosado</p>
                     <p id="kpi-total" class="text-xl font-black text-navy-900 mt-1">R$ 0,00</p>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500" title="Valor das glosas que foram totalmente acatadas pelos convênios">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Acatado</p>
                     <p id="kpi-acatado" class="text-xl font-black text-green-600 mt-1">R$ 0,00</p>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-yellow-500">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-yellow-500" title="Valor das glosas que ainda estão em processo de contestação ou aguardando decisão">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Pendente</p>
                     <p id="kpi-contestar" class="text-xl font-black text-yellow-600 mt-1">R$ 0,00</p>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-red-500">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-red-500" title="Valor das glosas que foram definitivamente perdidas">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Perdido</p>
                     <p id="kpi-perdido" class="text-xl font-black text-red-600 mt-1">R$ 0,00</p>
                 </div>
-                <div class="bg-navy-900 p-6 rounded-2xl shadow-xl text-white relative overflow-hidden">
+                <div class="bg-navy-900 p-6 rounded-2xl shadow-xl text-white relative overflow-hidden" title="Percentual de eficiência na recuperação das glosas (Acatado / Total)">
                     <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fas fa-chart-line text-6xl"></i></div>
                     <p class="text-blue-300 text-[10px] font-bold uppercase tracking-widest relative z-10">Eficiência</p>
                     <p id="kpi-taxa" class="text-2xl font-black mt-1 relative z-10">0%</p>
                 </div>
-                <div class="bg-green-600 p-6 rounded-2xl shadow-xl text-white relative overflow-hidden">
+                <div class="bg-green-600 p-6 rounded-2xl shadow-xl text-white relative overflow-hidden" title="Percentual do valor acatado que foi efetivamente pago pelos convênios">
                     <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fas fa-hand-holding-usd text-6xl"></i></div>
                     <p class="text-green-200 text-[10px] font-bold uppercase tracking-widest relative z-10">Conciliado (Pago)</p>
                     <p id="kpi-pago" class="text-xl font-black mt-1 relative z-10">R$ 0,00</p>
@@ -259,16 +259,19 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
                         <div class="relative">
                             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             <input type="text" id="table-search" onkeyup="renderTable()" placeholder="Buscar Paciente ou Lote..." class="w-full pl-11 pr-4 py-3 bg-white border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 shadow-sm">
                         </div>
-                        <select id="table-filter-conv" onchange="renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm dynamic-select-convenio">
+                        <select id="table-filter-conv" onchange="updateTableFilters(); renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm dynamic-select-convenio">
                             <option value="">Todos os Convênios</option>
                         </select>
-                        <select id="table-filter-uni" onchange="renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm dynamic-select-unidade">
+                        <select id="table-filter-uni" onchange="updateTableFilters(); renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm dynamic-select-unidade">
                             <option value="">Todas as Unidades</option>
+                        </select>
+                        <select id="table-filter-colab" onchange="updateTableFilters(); renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm dynamic-select-colaborador">
+                            <option value="">Todos os Colaboradores</option>
                         </select>
                     </div>
                 </div>
@@ -610,9 +613,9 @@
                 const payload = snapshot.val() || {};
                 if (payload.listas && typeof payload.listas === 'object') {
                     listas = {
-                        convenios: Array.isArray(payload.listas.convenios) ? payload.listas.convenios : listas.convenios,
-                        unidades: Array.isArray(payload.listas.unidades) ? payload.listas.unidades : listas.unidades,
-                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores : listas.colaboradores
+                        convenios: Array.isArray(payload.listas.convenios) ? payload.listas.convenios.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.convenios,
+                        unidades: Array.isArray(payload.listas.unidades) ? payload.listas.unidades.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.unidades,
+                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores
                     };
                 }
                 if (Array.isArray(payload.glosas)) glosas = payload.glosas;
@@ -634,6 +637,7 @@
             updateDashboardFiltersByTime();
             renderTable();
             renderPagosTable();
+            updateTableFilters();
         }
 
         function setupRealtimeSync() {
@@ -642,9 +646,9 @@
                 const payload = snapshot.val() || {};
                 if (payload.listas && typeof payload.listas === 'object') {
                     listas = {
-                        convenios: Array.isArray(payload.listas.convenios) ? payload.listas.convenios : listas.convenios,
-                        unidades: Array.isArray(payload.listas.unidades) ? payload.listas.unidades : listas.unidades,
-                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores : listas.colaboradores
+                        convenios: Array.isArray(payload.listas.convenios) ? payload.listas.convenios.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.convenios,
+                        unidades: Array.isArray(payload.listas.unidades) ? payload.listas.unidades.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.unidades,
+                        colaboradores: Array.isArray(payload.listas.colaboradores) ? payload.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores
                     };
                 }
                 if (Array.isArray(payload.glosas)) glosas = payload.glosas;
@@ -1013,6 +1017,35 @@
             renderUnidadeRankingTable();
         }
 
+        function updateTableFilters() {
+            const convSelect = document.getElementById('table-filter-conv');
+            const uniSelect = document.getElementById('table-filter-uni');
+            const colabSelect = document.getElementById('table-filter-colab');
+
+            const selectedConv = convSelect.value;
+            const selectedUni = uniSelect.value;
+            const selectedColab = colabSelect.value;
+
+            const filteredGlosas = glosas.filter(g =>
+                (selectedConv ? g.convenio === selectedConv : true) &&
+                (selectedUni ? g.unidade === selectedUni : true) &&
+                (selectedColab ? g.colaborador === selectedColab : true)
+            );
+
+            const convenios = [...new Set(filteredGlosas.map(g => g.convenio))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            const unidades = [...new Set(filteredGlosas.map(g => g.unidade))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            const colaboradores = [...new Set(filteredGlosas.map(g => g.colaborador))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+            convSelect.innerHTML = `<option value="">Todos os Convênios</option>` + convenios.map(i => `<option value="${i}">${i}</option>`).join('');
+            uniSelect.innerHTML = `<option value="">Todas as Unidades</option>` + unidades.map(i => `<option value="${i}">${i}</option>`).join('');
+            colabSelect.innerHTML = `<option value="">Todos os Colaboradores</option>` + colaboradores.map(i => `<option value="${i}">${i}</option>`).join('');
+
+            // Restore selections if still valid
+            if (convenios.includes(selectedConv)) convSelect.value = selectedConv;
+            if (unidades.includes(selectedUni)) uniSelect.value = selectedUni;
+            if (colaboradores.includes(selectedColab)) colabSelect.value = selectedColab;
+        }
+
         function refreshChart(id, type, data, options = {}) {
             const canvas = document.getElementById(id);
             if (!canvas) return;
@@ -1035,8 +1068,26 @@
 
             if (wrapper) wrapper.style.display = '';
             if (instances[id]) instances[id].destroy();
+
+            const defaultOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            };
+
             instances[id] = new Chart(canvas, {
-                type, data, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type === 'doughnut' || type === 'polarArea' } }, ...options }
+                type,
+                data,
+                options: {
+                    ...defaultOptions,
+                    ...options,
+                    plugins: {
+                        ...defaultOptions.plugins,
+                        ...(options.plugins || {})
+                    }
+                }
             });
         }
 
@@ -1146,10 +1197,12 @@
                 const searchQuery = normalizeString(document.getElementById('table-search').value);
                 const filterConv = document.getElementById('table-filter-conv').value;
                 const filterUni = document.getElementById('table-filter-uni').value;
+                const filterColab = document.getElementById('table-filter-colab').value;
                 const matchSearch = normalizeString(g.paciente).includes(searchQuery) || normalizeString(g.lote).includes(searchQuery);
                 const matchConv = filterConv === "" || g.convenio === filterConv;
                 const matchUni = filterUni === "" || g.unidade === filterUni;
-                return matchSearch && matchConv && matchUni;
+                const matchColab = filterColab === "" || g.colaborador === filterColab;
+                return matchSearch && matchConv && matchUni && matchColab;
             }).length;
             const totalPages = Math.max(1, Math.ceil(totalItems / tablePageSize));
             dadosPage = Math.min(totalPages, Math.max(1, dadosPage + direction));
@@ -1161,6 +1214,7 @@
             const searchQuery = normalizeString(document.getElementById('table-search').value);
             const filterConv = document.getElementById('table-filter-conv').value;
             const filterUni = document.getElementById('table-filter-uni').value;
+            const filterColab = document.getElementById('table-filter-colab').value;
 
             body.innerHTML = '';
             
@@ -1168,7 +1222,8 @@
                 const matchSearch = normalizeString(g.paciente).includes(searchQuery) || normalizeString(g.lote).includes(searchQuery);
                 const matchConv = filterConv === "" || g.convenio === filterConv;
                 const matchUni = filterUni === "" || g.unidade === filterUni;
-                return matchSearch && matchConv && matchUni;
+                const matchColab = filterColab === "" || g.colaborador === filterColab;
+                return matchSearch && matchConv && matchUni && matchColab;
             });
 
             const sortedData = filteredData.sort((a,b) => new Date(b.data) - new Date(a.data));
@@ -1410,7 +1465,7 @@
         
         function renderListManager() {
             const key = document.getElementById('list-selector').value;
-            document.getElementById('list-items-container').innerHTML = listas[key].map((item, idx) => `
+            document.getElementById('list-items-container').innerHTML = listas[key].sort((a, b) => a.localeCompare(b, 'pt-BR')).map((item, idx) => `
                 <li class="p-4 flex justify-between items-center text-xs font-black uppercase tracking-widest text-slate-600">
                     ${item}
                     <button onclick="removeListItem('${key}', ${idx})" class="h-8 w-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
@@ -1422,12 +1477,20 @@
             const key = document.getElementById('list-selector').value;
             if (key === 'colaboradores') return;
             const val = document.getElementById('new-list-item').value.trim();
-            if(val && !listas[key].includes(val)) { listas[key].push(val); persistDataToFirebase(); document.getElementById('new-list-item').value = ''; renderListManager(); updateDropdownsUI(); }
+            if(val && !listas[key].includes(val)) { 
+                listas[key].push(val); 
+                listas[key].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+                persistDataToFirebase(); 
+                document.getElementById('new-list-item').value = ''; 
+                renderListManager(); 
+                updateDropdownsUI(); 
+            }
         }
 
         function removeListItem(key, idx) {
             if (key === 'colaboradores') return;
             listas[key].splice(idx, 1);
+            listas[key].sort((a, b) => a.localeCompare(b, 'pt-BR'));
             persistDataToFirebase();
             renderListManager();
             updateDropdownsUI();
@@ -1477,7 +1540,11 @@
                     const confirmReplace = confirm("Este processo vai substituir TODOS os dados atuais. Deseja continuar?");
                     if (!confirmReplace) return;
 
-                    listas = data.listas;
+                    listas = {
+                        convenios: Array.isArray(data.listas.convenios) ? data.listas.convenios.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.convenios,
+                        unidades: Array.isArray(data.listas.unidades) ? data.listas.unidades.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.unidades,
+                        colaboradores: Array.isArray(data.listas.colaboradores) ? data.listas.colaboradores.sort((a, b) => a.localeCompare(b, 'pt-BR')) : listas.colaboradores
+                    };
                     glosas = data.glosas;
                     pagamentos = data.pagamentos;
                     await loadColaboradoresFromAPI();
