@@ -168,18 +168,14 @@
                     <div class="h-72 relative"><canvas id="chartStatus"></canvas></div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
+                <div class="lg:col-span-2 xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-balance-scale text-blue-500"></i> Glosado vs Acatado (Convênios)</h3>
                     <div class="h-72 relative"><canvas id="chartCompare"></canvas></div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-tags text-blue-500"></i> Ticket Médio por Convênio</h3>
                     <div class="h-72 relative"><canvas id="chartTicket"></canvas></div>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-pie text-blue-500"></i> Participação por Motivo de Glosa</h3>
-                    <div class="h-72 relative"><canvas id="chartMotivoDonut"></canvas></div>
                 </div>
             </div>
 
@@ -206,6 +202,7 @@
                                         <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
                                         <th class="p-3 border-b border-slate-200">Colaborador</th>
                                         <th class="p-3 border-b border-slate-200">Volume de Glosa</th>
+                                        <th class="p-3 border-b border-slate-200">Quantidade</th>
                                         <th class="p-3 border-b border-slate-200 text-right w-36">Valor</th>
                                     </tr>
                                 </thead>
@@ -229,6 +226,7 @@
                                         <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
                                         <th class="p-3 border-b border-slate-200">Unidade</th>
                                         <th class="p-3 border-b border-slate-200">Volume de Glosa</th>
+                                        <th class="p-3 border-b border-slate-200">Quantidade</th>
                                         <th class="p-3 border-b border-slate-200 text-right w-36">Valor</th>
                                     </tr>
                                 </thead>
@@ -252,6 +250,7 @@
                                 <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
                                 <th class="p-3 border-b border-slate-200">Motivo</th>
                                 <th class="p-3 border-b border-slate-200">Volume de Glosa</th>
+                                <th class="p-3 border-b border-slate-200">Proporção</th>
                                 <th class="p-3 border-b border-slate-200 text-right w-36">Valor</th>
                             </tr>
                         </thead>
@@ -1118,9 +1117,16 @@
                 datasets: [{ data: lostConvenioValues, backgroundColor: lostConvenios.map((_, idx) => donutColors[idx % donutColors.length]), borderWeight: 0 }]
             }, { plugins: { legend: { position: 'bottom' } }, cutout: '70%' });
 
-            const colabMap = data.reduce((acc, curr) => { acc[curr.colaborador] = (acc[curr.colaborador] || 0) + curr.valor; return acc; }, {});
+            const colabMap = data.reduce((acc, curr) => { 
+                if (!acc[curr.colaborador]) {
+                    acc[curr.colaborador] = { valor: 0, quantidade: 0 };
+                }
+                acc[curr.colaborador].valor += curr.valor;
+                acc[curr.colaborador].quantidade += 1;
+                return acc; 
+            }, {});
             colaboradorRanking = Object.entries(colabMap)
-                .map(([nome, valor]) => ({ nome, valor }))
+                .map(([nome, { valor, quantidade }]) => ({ nome, valor, quantidade }))
                 .sort((a, b) => b.valor - a.valor);
             colaboradorRankingPage = 1;
             renderColaboradorRankingTable();
@@ -1144,9 +1150,16 @@
                 datasets: [{ data: ticketMap, backgroundColor: ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'] }]
             });
 
-            const uniMap = data.reduce((acc, curr) => { acc[curr.unidade] = (acc[curr.unidade] || 0) + curr.valor; return acc; }, {});
+            const uniMap = data.reduce((acc, curr) => { 
+                if (!acc[curr.unidade]) {
+                    acc[curr.unidade] = { valor: 0, quantidade: 0 };
+                }
+                acc[curr.unidade].valor += curr.valor;
+                acc[curr.unidade].quantidade += 1;
+                return acc; 
+            }, {});
             unidadeRanking = Object.entries(uniMap)
-                .map(([nome, valor]) => ({ nome, valor }))
+                .map(([nome, { valor, quantidade }]) => ({ nome, valor, quantidade }))
                 .sort((a, b) => b.valor - a.valor);
             unidadeRankingPage = 1;
             renderUnidadeRankingTable();
@@ -1173,17 +1186,38 @@
             body.innerHTML = '';
 
             if (!motivoRanking.length) {
-                body.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
                 return;
             }
+
+            // Calculate total volume for proportion calculation
+            const totalVolume = motivoRanking.reduce((sum, item) => sum + item.volume, 0);
+            const maxVolume = Math.max(...motivoRanking.map(item => item.volume));
 
             motivoRanking.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 const posicao = index + 1;
+                const percentage = ((item.volume / totalVolume) * 100).toFixed(1);
+                const barWidth = (item.volume / maxVolume) * 100; // For visual bar width
+                
+                // Determine bar color based on position
+                let barColor = 'bg-blue-500';
+                if (posicao === 1) barColor = 'bg-green-500';
+                else if (posicao === 2) barColor = 'bg-blue-400';
+                else if (posicao === 3) barColor = 'bg-blue-300';
+                
                 tr.innerHTML = `
                     <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
                     <td class="p-3 font-bold text-slate-700">${item.nome}</td>
                     <td class="p-3">${item.volume}</td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 bg-slate-100 rounded-full h-6 relative overflow-hidden">
+                                <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width: ${barWidth}%"></div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-600 min-w-[3rem] text-right">${percentage}%</span>
+                        </div>
+                    </td>
                     <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                 `;
                 body.appendChild(tr);
@@ -1289,20 +1323,31 @@
             body.innerHTML = '';
 
             if (pageItems.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
             } else {
+                const totalValor = colaboradorRanking.reduce((sum, item) => sum + item.valor, 0);
                 pageItems.forEach((item, index) => {
                     const tr = document.createElement('tr');
                     const posicao = start + index + 1;
-                    const pct = maxValor > 0 ? (item.valor / maxValor) * 100 : 0;
+                    const percentage = totalValor > 0 ? ((item.valor / totalValor) * 100).toFixed(1) : '0.0';
+                    const barWidth = maxValor > 0 ? (item.valor / maxValor) * 100 : 0;
+                    
+                    // Determine bar color based on position
+                    let barColor = 'bg-blue-500';
+                    if (posicao === 1) barColor = 'bg-green-500';
+                    else if (posicao === 2) barColor = 'bg-blue-400';
+                    else if (posicao === 3) barColor = 'bg-blue-300';
+                    
                     tr.innerHTML = `
                         <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
                         <td class="p-3 font-bold text-slate-700">${item.nome}</td>
-                        <td class="p-3">
-                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-blue-600 rounded-full" style="width:${pct.toFixed(1)}%"></div>
+                        <td class="p-3 py-2">
+                            <div class="text-xs font-bold text-slate-600 mb-1 text-center">${percentage}%</div>
+                            <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width:${barWidth}%"></div>
                             </div>
                         </td>
+                        <td class="p-3 text-center font-bold text-slate-600">${item.quantidade}</td>
                         <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                     `;
                     body.appendChild(tr);
@@ -1339,20 +1384,31 @@
             body.innerHTML = '';
 
             if (pageItems.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
             } else {
+                const totalValor = unidadeRanking.reduce((sum, item) => sum + item.valor, 0);
                 pageItems.forEach((item, index) => {
                     const tr = document.createElement('tr');
                     const posicao = start + index + 1;
-                    const pct = maxValor > 0 ? (item.valor / maxValor) * 100 : 0;
+                    const percentage = totalValor > 0 ? ((item.valor / totalValor) * 100).toFixed(1) : '0.0';
+                    const barWidth = maxValor > 0 ? (item.valor / maxValor) * 100 : 0;
+                    
+                    // Determine bar color based on position
+                    let barColor = 'bg-blue-500';
+                    if (posicao === 1) barColor = 'bg-green-500';
+                    else if (posicao === 2) barColor = 'bg-blue-400';
+                    else if (posicao === 3) barColor = 'bg-blue-300';
+                    
                     tr.innerHTML = `
                         <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
                         <td class="p-3 font-bold text-slate-700">${item.nome}</td>
-                        <td class="p-3">
-                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-blue-600 rounded-full" style="width:${pct.toFixed(1)}%"></div>
+                        <td class="p-3 py-2">
+                            <div class="text-xs font-bold text-slate-600 mb-1 text-center">${percentage}%</div>
+                            <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width:${barWidth}%"></div>
                             </div>
                         </td>
+                        <td class="p-3 text-center font-bold text-slate-600">${item.quantidade}</td>
                         <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                     `;
                     body.appendChild(tr);
