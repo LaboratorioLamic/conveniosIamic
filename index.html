@@ -201,18 +201,13 @@
                                     <tr>
                                         <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
                                         <th class="p-3 border-b border-slate-200">Colaborador</th>
-                                        <th class="p-3 border-b border-slate-200">Volume de Glosa</th>
-                                        <th class="p-3 border-b border-slate-200">Quantidade</th>
-                                        <th class="p-3 border-b border-slate-200 text-right w-36">Valor</th>
+                                        <th class="p-3 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortColaboradorRanking('quantidade')">Volume de Glosa</th>
+                                        <th class="p-3 border-b border-slate-200 text-right w-36 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortColaboradorRanking('valor')">Valor</th>
+                                        <th class="p-3 border-b border-slate-200 w-48">Proporção</th>
                                     </tr>
                                 </thead>
                                 <tbody id="colaborador-ranking-body" class="text-sm divide-y divide-slate-100"></tbody>
                             </table>
-                        </div>
-                        <div class="mt-3 flex items-center justify-between text-[11px] font-bold text-slate-500">
-                            <button id="colab-prev" onclick="changeColaboradorRankingPage(-1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
-                            <span id="colab-page-info">Página 1 de 1</span>
-                            <button id="colab-next" onclick="changeColaboradorRankingPage(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
                         </div>
                     </div>
                 </div>
@@ -225,18 +220,13 @@
                                     <tr>
                                         <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
                                         <th class="p-3 border-b border-slate-200">Unidade</th>
-                                        <th class="p-3 border-b border-slate-200">Volume de Glosa</th>
-                                        <th class="p-3 border-b border-slate-200">Quantidade</th>
-                                        <th class="p-3 border-b border-slate-200 text-right w-36">Valor</th>
+                                        <th class="p-3 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortUnidadeRanking('quantidade')">Volume de Glosa</th>
+                                        <th class="p-3 border-b border-slate-200 text-right w-36 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortUnidadeRanking('valor')">Valor</th>
+                                        <th class="p-3 border-b border-slate-200 w-48">Proporção</th>
                                     </tr>
                                 </thead>
                                 <tbody id="unidade-ranking-body" class="text-sm divide-y divide-slate-100"></tbody>
                             </table>
-                        </div>
-                        <div class="mt-3 flex items-center justify-between text-[11px] font-bold text-slate-500">
-                            <button id="uni-prev" onclick="changeUnidadeRankingPage(-1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
-                            <span id="uni-page-info">Página 1 de 1</span>
-                            <button id="uni-next" onclick="changeUnidadeRankingPage(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
                         </div>
                     </div>
                 </div>
@@ -249,9 +239,9 @@
                             <tr>
                                 <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
                                 <th class="p-3 border-b border-slate-200">Motivo</th>
-                                <th class="p-3 border-b border-slate-200">Volume de Glosa</th>
-                                <th class="p-3 border-b border-slate-200">Proporção</th>
-                                <th class="p-3 border-b border-slate-200 text-right w-36">Valor</th>
+                                <th class="p-3 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortMotivoRanking('volume')">Volume de Glosa</th>
+                                <th class="p-3 border-b border-slate-200 text-right w-36 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortMotivoRanking('valor')">Valor</th>
+                                <th class="p-3 border-b border-slate-200 w-48">Proporção</th>
                             </tr>
                         </thead>
                         <tbody id="motivo-ranking-body" class="text-sm divide-y divide-slate-100"></tbody>
@@ -598,12 +588,18 @@
         let colaboradorRanking = [];
         let colaboradorRankingPage = 1;
         const colaboradorRankingPageSize = 8;
+        let colaboradorSortField = 'quantidade';
+        let colaboradorSortOrder = 'desc';
         let unidadeRanking = [];
         let unidadeRankingPage = 1;
         const unidadeRankingPageSize = 8;
+        let unidadeSortField = 'quantidade';
+        let unidadeSortOrder = 'desc';
         let motivoRanking = [];
         let motivoRankingPage = 1;
         const motivoRankingPageSize = 8;
+        let motivoSortField = 'volume';
+        let motivoSortOrder = 'desc';
         let dadosPage = 1;
         let pagosPage = 1;
         const tablePageSize = 20;
@@ -1140,7 +1136,7 @@
             }, {});
             colaboradorRanking = Object.entries(colabMap)
                 .map(([nome, { valor, quantidade }]) => ({ nome, valor, quantidade }))
-                .sort((a, b) => b.valor - a.valor);
+                .sort((a, b) => b.quantidade - a.quantidade);
             colaboradorRankingPage = 1;
             renderColaboradorRankingTable();
 
@@ -1173,7 +1169,7 @@
             }, {});
             unidadeRanking = Object.entries(uniMap)
                 .map(([nome, { valor, quantidade }]) => ({ nome, valor, quantidade }))
-                .sort((a, b) => b.valor - a.valor);
+                .sort((a, b) => b.quantidade - a.quantidade);
             unidadeRankingPage = 1;
             renderUnidadeRankingTable();
 
@@ -1187,7 +1183,7 @@
             }, {});
             motivoRanking = Object.entries(motivoVolumeMap)
                 .map(([nome, { valor, volume }]) => ({ nome, valor, volume }))
-                .sort((a, b) => b.valor - a.valor);
+                .sort((a, b) => b.volume - a.volume);
             motivoRankingPage = 1;
             renderMotivoRankingTable();
         }
@@ -1203,15 +1199,16 @@
                 return;
             }
 
-            // Calculate total volume for proportion calculation
-            const totalVolume = motivoRanking.reduce((sum, item) => sum + item.volume, 0);
-            const maxVolume = Math.max(...motivoRanking.map(item => item.volume));
+            // Calculate total for proportion calculation based on current sort field
+            const totalField = motivoRanking.reduce((sum, item) => sum + item[motivoSortField], 0);
+            const maxField = Math.max(...motivoRanking.map(item => item[motivoSortField]));
 
             motivoRanking.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 const posicao = index + 1;
-                const percentage = ((item.volume / totalVolume) * 100).toFixed(1);
-                const barWidth = (item.volume / maxVolume) * 100; // For visual bar width
+                const fieldValue = item[motivoSortField];
+                const percentage = ((fieldValue / totalField) * 100).toFixed(1);
+                const barWidth = (fieldValue / maxField) * 100; // For visual bar width
                 
                 // Determine bar color based on position
                 let barColor = 'bg-blue-500';
@@ -1223,6 +1220,7 @@
                     <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
                     <td class="p-3 font-bold text-slate-700">${item.nome}</td>
                     <td class="p-3">${item.volume}</td>
+                    <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                     <td class="p-3">
                         <div class="flex items-center gap-2">
                             <div class="flex-1 bg-slate-100 rounded-full h-6 relative overflow-hidden">
@@ -1231,7 +1229,6 @@
                             <span class="text-xs font-bold text-slate-600 min-w-[3rem] text-right">${percentage}%</span>
                         </div>
                     </td>
-                    <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                 `;
                 body.appendChild(tr);
             });
@@ -1311,126 +1308,165 @@
             });
         }
 
-        function changeColaboradorRankingPage(direction) {
-            const totalPages = Math.max(1, Math.ceil(colaboradorRanking.length / colaboradorRankingPageSize));
-            colaboradorRankingPage = Math.min(totalPages, Math.max(1, colaboradorRankingPage + direction));
-            renderColaboradorRankingTable();
-        }
-
         function renderColaboradorRankingTable() {
             const body = document.getElementById('colaborador-ranking-body');
-            const info = document.getElementById('colab-page-info');
-            const prevBtn = document.getElementById('colab-prev');
-            const nextBtn = document.getElementById('colab-next');
-            if (!body || !info || !prevBtn || !nextBtn) return;
-
-            const totalItems = colaboradorRanking.length;
-            const totalPages = Math.max(1, Math.ceil(totalItems / colaboradorRankingPageSize));
-            if (colaboradorRankingPage > totalPages) colaboradorRankingPage = totalPages;
-
-            const start = (colaboradorRankingPage - 1) * colaboradorRankingPageSize;
-            const end = start + colaboradorRankingPageSize;
-            const pageItems = colaboradorRanking.slice(start, end);
-            const maxValor = colaboradorRanking[0]?.valor || 0;
+            if (!body) return;
 
             body.innerHTML = '';
 
-            if (pageItems.length === 0) {
+            if (!colaboradorRanking.length) {
                 body.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
-            } else {
-                const totalValor = colaboradorRanking.reduce((sum, item) => sum + item.valor, 0);
-                pageItems.forEach((item, index) => {
-                    const tr = document.createElement('tr');
-                    const posicao = start + index + 1;
-                    const percentage = totalValor > 0 ? ((item.valor / totalValor) * 100).toFixed(1) : '0.0';
-                    const barWidth = maxValor > 0 ? (item.valor / maxValor) * 100 : 0;
-                    
-                    // Determine bar color based on position
-                    let barColor = 'bg-blue-500';
-                    if (posicao === 1) barColor = 'bg-green-500';
-                    else if (posicao === 2) barColor = 'bg-blue-400';
-                    else if (posicao === 3) barColor = 'bg-blue-300';
-                    
-                    tr.innerHTML = `
-                        <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
-                        <td class="p-3 font-bold text-slate-700">${item.nome}</td>
-                        <td class="p-3 py-2">
-                            <div class="text-xs font-bold text-slate-600 mb-1 text-center">${percentage}%</div>
-                            <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width:${barWidth}%"></div>
-                            </div>
-                        </td>
-                        <td class="p-3 text-center font-bold text-slate-600">${item.quantidade}</td>
-                        <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                    `;
-                    body.appendChild(tr);
-                });
+                return;
             }
 
-            info.innerText = `Página ${colaboradorRankingPage} de ${totalPages}`;
-            prevBtn.disabled = colaboradorRankingPage <= 1;
-            nextBtn.disabled = colaboradorRankingPage >= totalPages;
-        }
-
-        function changeUnidadeRankingPage(direction) {
-            const totalPages = Math.max(1, Math.ceil(unidadeRanking.length / unidadeRankingPageSize));
-            unidadeRankingPage = Math.min(totalPages, Math.max(1, unidadeRankingPage + direction));
-            renderUnidadeRankingTable();
+            // Calcular total e máximo baseado no campo de ordenamento atual
+            const totalField = colaboradorRanking.reduce((sum, item) => sum + item[colaboradorSortField], 0);
+            const maxField = colaboradorRanking[0]?.[colaboradorSortField] || 0;
+            
+            colaboradorRanking.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const posicao = index + 1;
+                const fieldValue = item[colaboradorSortField];
+                const percentage = totalField > 0 ? ((fieldValue / totalField) * 100).toFixed(1) : '0.0';
+                const barWidth = maxField > 0 ? (fieldValue / maxField) * 100 : 0;
+                
+                // Determine bar color based on position
+                let barColor = 'bg-blue-500';
+                if (posicao === 1) barColor = 'bg-green-500';
+                else if (posicao === 2) barColor = 'bg-blue-400';
+                else if (posicao === 3) barColor = 'bg-blue-300';
+                
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
+                    <td class="p-3 font-bold text-slate-700">${item.nome}</td>
+                    <td class="p-3 text-center font-bold text-slate-600">${item.quantidade}</td>
+                    <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td class="p-3 py-2">
+                        <div class="text-xs font-bold text-slate-600 mb-1 text-center">${percentage}%</div>
+                        <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width:${barWidth}%"></div>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
         }
 
         function renderUnidadeRankingTable() {
             const body = document.getElementById('unidade-ranking-body');
-            const info = document.getElementById('uni-page-info');
-            const prevBtn = document.getElementById('uni-prev');
-            const nextBtn = document.getElementById('uni-next');
-            if (!body || !info || !prevBtn || !nextBtn) return;
-
-            const totalItems = unidadeRanking.length;
-            const totalPages = Math.max(1, Math.ceil(totalItems / unidadeRankingPageSize));
-            if (unidadeRankingPage > totalPages) unidadeRankingPage = totalPages;
-
-            const start = (unidadeRankingPage - 1) * unidadeRankingPageSize;
-            const end = start + unidadeRankingPageSize;
-            const pageItems = unidadeRanking.slice(start, end);
-            const maxValor = unidadeRanking[0]?.valor || 0;
+            if (!body) return;
 
             body.innerHTML = '';
 
-            if (pageItems.length === 0) {
+            if (!unidadeRanking.length) {
                 body.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados para o período selecionado</td></tr>`;
-            } else {
-                const totalValor = unidadeRanking.reduce((sum, item) => sum + item.valor, 0);
-                pageItems.forEach((item, index) => {
-                    const tr = document.createElement('tr');
-                    const posicao = start + index + 1;
-                    const percentage = totalValor > 0 ? ((item.valor / totalValor) * 100).toFixed(1) : '0.0';
-                    const barWidth = maxValor > 0 ? (item.valor / maxValor) * 100 : 0;
-                    
-                    // Determine bar color based on position
-                    let barColor = 'bg-blue-500';
-                    if (posicao === 1) barColor = 'bg-green-500';
-                    else if (posicao === 2) barColor = 'bg-blue-400';
-                    else if (posicao === 3) barColor = 'bg-blue-300';
-                    
-                    tr.innerHTML = `
-                        <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
-                        <td class="p-3 font-bold text-slate-700">${item.nome}</td>
-                        <td class="p-3 py-2">
-                            <div class="text-xs font-bold text-slate-600 mb-1 text-center">${percentage}%</div>
-                            <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width:${barWidth}%"></div>
-                            </div>
-                        </td>
-                        <td class="p-3 text-center font-bold text-slate-600">${item.quantidade}</td>
-                        <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                    `;
-                    body.appendChild(tr);
-                });
+                return;
             }
 
-            info.innerText = `Página ${unidadeRankingPage} de ${totalPages}`;
-            prevBtn.disabled = unidadeRankingPage <= 1;
-            nextBtn.disabled = unidadeRankingPage >= totalPages;
+            // Calcular total e máximo baseado no campo de ordenamento atual
+            const totalField = unidadeRanking.reduce((sum, item) => sum + item[unidadeSortField], 0);
+            const maxField = unidadeRanking[0]?.[unidadeSortField] || 0;
+            
+            unidadeRanking.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const posicao = index + 1;
+                const fieldValue = item[unidadeSortField];
+                const percentage = totalField > 0 ? ((fieldValue / totalField) * 100).toFixed(1) : '0.0';
+                const barWidth = maxField > 0 ? (fieldValue / maxField) * 100 : 0;
+                
+                // Determine bar color based on position
+                let barColor = 'bg-blue-500';
+                if (posicao === 1) barColor = 'bg-green-500';
+                else if (posicao === 2) barColor = 'bg-blue-400';
+                else if (posicao === 3) barColor = 'bg-blue-300';
+                
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
+                    <td class="p-3 font-bold text-slate-700">${item.nome}</td>
+                    <td class="p-3 text-center font-bold text-slate-600">${item.quantidade}</td>
+                    <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td class="p-3 py-2">
+                        <div class="text-xs font-bold text-slate-600 mb-1 text-center">${percentage}%</div>
+                        <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width:${barWidth}%"></div>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        // ================= FUNÇÕES DE ORDENAMENTO ================= //
+        function sortColaboradorRanking(field) {
+            if (colaboradorSortField === field) {
+                colaboradorSortOrder = colaboradorSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                colaboradorSortField = field;
+                colaboradorSortOrder = 'desc';
+            }
+            
+            colaboradorRanking.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                
+                if (field === 'nome') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                    return colaboradorSortOrder === 'asc' ? aVal.localeCompare(bVal, 'pt-BR') : bVal.localeCompare(aVal, 'pt-BR');
+                } else {
+                    return colaboradorSortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+            });
+            
+            renderColaboradorRankingTable();
+        }
+
+        function sortUnidadeRanking(field) {
+            if (unidadeSortField === field) {
+                unidadeSortOrder = unidadeSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                unidadeSortField = field;
+                unidadeSortOrder = 'desc';
+            }
+            
+            unidadeRanking.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                
+                if (field === 'nome') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                    return unidadeSortOrder === 'asc' ? aVal.localeCompare(bVal, 'pt-BR') : bVal.localeCompare(aVal, 'pt-BR');
+                } else {
+                    return unidadeSortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+            });
+            
+            renderUnidadeRankingTable();
+        }
+
+        function sortMotivoRanking(field) {
+            if (motivoSortField === field) {
+                motivoSortOrder = motivoSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                motivoSortField = field;
+                motivoSortOrder = 'desc';
+            }
+            
+            motivoRanking.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                
+                if (field === 'nome') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                    return motivoSortOrder === 'asc' ? aVal.localeCompare(bVal, 'pt-BR') : bVal.localeCompare(aVal, 'pt-BR');
+                } else {
+                    return motivoSortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+            });
+            
+            renderMotivoRankingTable();
         }
 
         // ================= TABELA GLOSAS ================= //
