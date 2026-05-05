@@ -81,7 +81,7 @@
                     </select>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
                     <div id="box-start" class="hidden">
                         <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Data Início</label>
                         <input type="date" id="dash-start" onchange="updateDashboardFiltersByTime()" class="w-full border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
@@ -109,6 +109,10 @@
                     <div>
                         <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Colaborador</label>
                         <select id="dash-colaborador" onchange="updateDashboardFiltersByTime()" class="w-full border-slate-200 rounded-lg text-sm dynamic-select-colaborador"><option value="">Todos</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 mb-1 uppercase">Motivo</label>
+                        <select id="dash-motivo" onchange="updateDashboardFiltersByTime()" class="w-full border-slate-200 rounded-lg text-sm dynamic-select-motivos"><option value="">Todos</option></select>
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick="resetDashboardFilters()" title="Resetar filtros" class="h-11 w-11 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all flex items-center justify-center">
@@ -883,6 +887,7 @@
             const dashConvenio = document.getElementById('dash-convenio');
             const dashUnidade = document.getElementById('dash-unidade');
             const dashColaborador = document.getElementById('dash-colaborador');
+            const dashMotivo = document.getElementById('dash-motivo');
 
             if (filterType) filterType.value = 'year';
             if (dashYear) dashYear.value = new Date().getFullYear();
@@ -892,6 +897,7 @@
             if (dashConvenio) dashConvenio.value = '';
             if (dashUnidade) dashUnidade.value = '';
             if (dashColaborador) dashColaborador.value = '';
+            if (dashMotivo) dashMotivo.value = '';
 
             toggleFilterInputs();
             updateDashboardFiltersByTime();
@@ -901,10 +907,12 @@
             const convenioSelect = document.getElementById('dash-convenio');
             const unidadeSelect = document.getElementById('dash-unidade');
             const colaboradorSelect = document.getElementById('dash-colaborador');
+            const motivoSelect = document.getElementById('dash-motivo');
 
             const selectedConvenio = convenioSelect.value;
             const selectedUnidade = unidadeSelect.value;
             const selectedColaborador = colaboradorSelect.value;
+            const selectedMotivo = motivoSelect.value;
 
             const glosasNoPeriodo = glosas.filter(g => matchesDashboardTimeFilter(g.data));
             const pagosNoPeriodo = pagamentos.filter(p => matchesDashboardTimeFilter(p.data));
@@ -917,7 +925,7 @@
                 (selectedConvenio ? g.convenio === selectedConvenio : true) &&
                 (selectedColaborador ? g.colaborador === selectedColaborador : true)
             );
-            const glosasForColaborador = glosasNoPeriodo.filter(g =>
+            const glosasForColab = glosasNoPeriodo.filter(g =>
                 (selectedConvenio ? g.convenio === selectedConvenio : true) &&
                 (selectedUnidade ? g.unidade === selectedUnidade : true)
             );
@@ -927,17 +935,43 @@
                 ...((!selectedUnidade && !selectedColaborador) ? pagosNoPeriodo.map(p => p.convenio) : [])
             ])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
             const unidadesComDados = [...new Set(glosasForUnidade.map(g => g.unidade))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-            const colaboradoresComDados = [...new Set(glosasForColaborador.map(g => g.colaborador))]
+            const colaboradoresComDados = [...new Set(glosasForColab.map(g => g.colaborador))]
                 .filter(Boolean)
                 .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            // Calcular motivos com dados usando mesma lógica do ranking (ordenado por volume/quantidade)
+            // Usar dados já filtrados por convênio, unidade e colaborador para respeitar outros filtros
+            const dadosFiltradosParaMotivo = glosasNoPeriodo.filter(g =>
+                (selectedConvenio ? g.convenio === selectedConvenio : true) &&
+                (selectedUnidade ? g.unidade === selectedUnidade : true) &&
+                (selectedColaborador ? g.colaborador === selectedColaborador : true)
+            );
+            
+            const motivoVolumeMap = dadosFiltradosParaMotivo.reduce((acc, curr) => {
+                const key = curr.motivo || 'Sem Motivo';
+                if (!acc[key]) acc[key] = { valor: 0, volume: 0 };
+                acc[key].valor += curr.valor;
+                acc[key].volume += 1;
+                return acc;
+            }, {});
+            const motivosComDados = Object.entries(motivoVolumeMap)
+                .filter(([nome, { volume }]) => volume > 0) // Ocultar motivos com soma zero
+                .map(([nome]) => nome)
+                .sort((a, b) => {
+                    // Ordenar por quantidade (volume) como no ranking
+                    const volumeA = motivoVolumeMap[a].volume;
+                    const volumeB = motivoVolumeMap[b].volume;
+                    return volumeB - volumeA;
+                });
 
             convenioSelect.innerHTML = `<option value="">Todos</option>` + conveniosComDados.map(i => `<option value="${i}">${i}</option>`).join('');
             unidadeSelect.innerHTML = `<option value="">Todas</option>` + unidadesComDados.map(i => `<option value="${i}">${i}</option>`).join('');
             colaboradorSelect.innerHTML = `<option value="">Todos</option>` + colaboradoresComDados.map(i => `<option value="${i}">${i}</option>`).join('');
+            motivoSelect.innerHTML = `<option value="">Todos</option>` + motivosComDados.map(i => `<option value="${i}">${i}</option>`).join('');
 
             convenioSelect.value = conveniosComDados.includes(selectedConvenio) ? selectedConvenio : '';
             unidadeSelect.value = unidadesComDados.includes(selectedUnidade) ? selectedUnidade : '';
             colaboradorSelect.value = colaboradoresComDados.includes(selectedColaborador) ? selectedColaborador : '';
+            motivoSelect.value = motivosComDados.includes(selectedMotivo) ? selectedMotivo : '';
 
             updateDashboard();
         }
@@ -947,6 +981,7 @@
             const conv = document.getElementById('dash-convenio').value;
             const uni = document.getElementById('dash-unidade').value;
             const colab = document.getElementById('dash-colaborador').value;
+            const motiv = document.getElementById('dash-motivo').value;
 
             // Filtra Glosas
             let filtered = glosas.filter(g => {
@@ -962,7 +997,8 @@
                 return matchTime && 
                        (conv ? g.convenio === conv : true) && 
                        (uni ? g.unidade === uni : true) &&
-                       (colab ? g.colaborador === colab : true);
+                       (colab ? g.colaborador === colab : true) &&
+                       (motiv ? g.motivo === motiv : true);
             });
 
             // Filtra Glosas sem aplicar filtro de colaborador (para gráficos gerais)
@@ -978,7 +1014,8 @@
                 }
                 return matchTime && 
                        (conv ? g.convenio === conv : true) && 
-                       (uni ? g.unidade === uni : true);
+                       (uni ? g.unidade === uni : true) &&
+                       (motiv ? g.motivo === motiv : true);
             });
 
             // Filtra Glosas sem aplicar filtro de colaborador e unidade (para conciliação)
@@ -993,7 +1030,8 @@
                     matchTime = (s ? g.data >= s : true) && (e ? g.data <= e : true);
                 }
                 return matchTime && 
-                       (conv ? g.convenio === conv : true);
+                       (conv ? g.convenio === conv : true) &&
+                       (motiv ? g.motivo === motiv : true);
             });
 
             // Filtra Pagamentos (ignora unidade e colaborador, é geral do convênio no período)
