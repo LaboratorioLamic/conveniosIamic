@@ -1099,9 +1099,16 @@
             // Pie: Conciliação Geral (Diferença entre o que foi Acatado e o que efetivamente caiu na conta)
             // Se o que foi pago for maior que acatado (recebimento atrasado), limitamos a view ou mostramos o "sobra". Vamos manter simples.
             let pendentePgto = Math.max(0, totalAcatadoGeral - totalPagoGeral);
+            const conciliacaoLabels = ['Aguardando Depósito', 'Valor Já Pago'];
+            const conciliacaoValues = [pendentePgto, totalPagoGeral];
+            const conciliacaoTotal = conciliacaoValues.reduce((sum, val) => sum + val, 0);
+            const conciliacaoLabelsWithPercentage = conciliacaoLabels.map((label, idx) => 
+                formatLabelWithPercentage(label, conciliacaoValues[idx], conciliacaoTotal)
+            );
+            
             refreshChart('chartConciliacaoPie', 'doughnut', {
-                labels: ['Aguardando Depósito', 'Valor Já Pago'],
-                datasets: [{ data: [pendentePgto, totalPagoGeral], backgroundColor: ['#fca5a5', '#16a34a'], borderWeight: 0 }]
+                labels: conciliacaoLabelsWithPercentage,
+                datasets: [{ data: conciliacaoValues, backgroundColor: ['#fca5a5', '#16a34a'], borderWeight: 0 }]
             }, { plugins: { legend: { position: 'bottom' } }, cutout: '75%' });
 
             // Bar: Acatado vs Pago por Convênio (somente convênios com dados no período)
@@ -1134,9 +1141,16 @@
             // --- Gráficos Originais Ajustados --- //
 
             const statusMap = data.reduce((acc, curr) => { acc[curr.status] = (acc[curr.status] || 0) + curr.valor; return acc; }, {});
+            const statusLabels = Object.keys(statusMap);
+            const statusValues = Object.values(statusMap);
+            const statusTotal = statusValues.reduce((sum, val) => sum + val, 0);
+            const statusLabelsWithPercentage = statusLabels.map((label, idx) => 
+                formatLabelWithPercentage(label, statusValues[idx], statusTotal)
+            );
+            
             refreshChart('chartStatus', 'doughnut', {
-                labels: Object.keys(statusMap),
-                datasets: [{ data: Object.values(statusMap), backgroundColor: Object.keys(statusMap).map(k => statusConfig[k]), borderWeight: 0 }]
+                labels: statusLabelsWithPercentage,
+                datasets: [{ data: statusValues, backgroundColor: statusLabels.map(k => statusConfig[k]), borderWeight: 0 }]
             }, { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } }, cutout: '70%' });
 
             const motivoMap = data.reduce((acc, curr) => { const key = curr.motivo || 'Sem Motivo'; acc[key] = (acc[key] || 0) + curr.valor; return acc; }, {});
@@ -1144,9 +1158,13 @@
             const motivoLabels = motivoEntries.map(([label]) => label);
             const motivoValues = motivoEntries.map(([, valor]) => valor);
             const motivoColors = motivoLabels.map((_, idx) => ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#f97316', '#0ea5e9', '#ec4899'][idx % 7]);
+            const motivoTotal = motivoValues.reduce((sum, val) => sum + val, 0);
+            const motivoLabelsWithPercentage = motivoLabels.map((label, idx) => 
+                formatLabelWithPercentage(label, motivoValues[idx], motivoTotal)
+            );
 
             refreshChart('chartMotivoDonut', 'doughnut', {
-                labels: motivoLabels,
+                labels: motivoLabelsWithPercentage,
                 datasets: [{ data: motivoValues, backgroundColor: motivoColors, borderWeight: 0 }]
             }, { plugins: { legend: { position: 'bottom' } }, cutout: '70%' });
 
@@ -1170,8 +1188,13 @@
             const lostConvenios = Object.keys(lostByConvenioMap);
             const lostConvenioValues = Object.values(lostByConvenioMap);
             const donutColors = ['#ef4444', '#f97316', '#f59e0b', '#facc15', '#22c55e', '#38bdf8', '#818cf8'];
+            const lostTotal = lostConvenioValues.reduce((sum, val) => sum + val, 0);
+            const lostLabelsWithPercentage = lostConvenios.map((label, idx) => 
+                formatLabelWithPercentage(label, lostConvenioValues[idx], lostTotal)
+            );
+            
             refreshChart('chartPerdidasDonut', 'doughnut', {
-                labels: lostConvenios,
+                labels: lostLabelsWithPercentage,
                 datasets: [{ data: lostConvenioValues, backgroundColor: lostConvenios.map((_, idx) => donutColors[idx % donutColors.length]), borderWeight: 0 }]
             }, { plugins: { legend: { position: 'bottom' } }, cutout: '70%' });
 
@@ -1310,6 +1333,11 @@
             if (convenios.includes(selectedConv)) convSelect.value = selectedConv;
             if (unidades.includes(selectedUni)) uniSelect.value = selectedUni;
             if (colaboradores.includes(selectedColab)) colabSelect.value = selectedColab;
+        }
+
+        function formatLabelWithPercentage(label, value, total) {
+            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+            return `${label} (${percentage}%)`;
         }
 
         function refreshChart(id, type, data, options = {}) {
