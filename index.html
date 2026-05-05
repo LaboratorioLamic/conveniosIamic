@@ -118,10 +118,14 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-600" title="Valor total das glosas registradas no período selecionado">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total Glosado</p>
                     <p id="kpi-total" class="text-xl font-black text-navy-900 mt-1">R$ 0,00</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-purple-600" title="Quantidade de guias glosadas no período selecionado">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Quantidade</p>
+                    <p id="kpi-quantidade" class="text-xl font-black text-purple-900 mt-1">0</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500" title="Valor das glosas que foram totalmente acatadas pelos convênios">
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Acatado</p>
@@ -1021,6 +1025,9 @@
                 }
             });
 
+            // Calcular quantidade de guias glosadas
+            const quantidade = filtered.length;
+
             let totalPago = filteredPagos.reduce((acc, curr) => acc + curr.valor, 0);
             const taxa = total > 0 ? ((acatado / total) * 100).toFixed(1) : 0;
 
@@ -1033,6 +1040,7 @@
             const percentualPago = acatadoConciliacao > 0 ? ((totalPago / acatadoConciliacao) * 100).toFixed(1) : 0;
 
             document.getElementById('kpi-total').innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('kpi-quantidade').innerText = quantidade.toLocaleString('pt-BR');
             document.getElementById('kpi-acatado').innerText = acatado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('kpi-contestar').innerText = contestar.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('kpi-perdido').innerText = perdido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
