@@ -635,6 +635,8 @@
             await loadDataFromFirebase();
             await loadColaboradoresFromAPI();
             refreshAllUI();
+            // Garantir que os filtros do dashboard sejam atualizados após carregamento inicial
+            setTimeout(() => updateDashboardFiltersByTime(), 100);
             await waitForInitialChartsReady();
             setInitialLoadingState(false);
             setupRealtimeSync();
@@ -781,6 +783,8 @@
                 saveAppStateToLocalCache();
                 await loadColaboradoresFromAPI();
                 refreshAllUI();
+                // Garantir que os filtros do dashboard sejam atualizados após carregar os dados
+                setTimeout(() => updateDashboardFiltersByTime(), 100);
             }, error => {
                 console.error("Falha na sincronização em tempo real com Firebase.", error);
             });
@@ -904,6 +908,12 @@
         }
 
         function updateDashboardFiltersByTime() {
+            // Verificar se os dados estão carregados
+            if (!glosas || glosas.length === 0) {
+                console.log('Dados ainda não carregados, aguardando...');
+                return;
+            }
+
             const convenioSelect = document.getElementById('dash-convenio');
             const unidadeSelect = document.getElementById('dash-unidade');
             const colaboradorSelect = document.getElementById('dash-colaborador');
@@ -917,20 +927,21 @@
             const glosasNoPeriodo = glosas.filter(g => matchesDashboardTimeFilter(g.data));
             const pagosNoPeriodo = pagamentos.filter(p => matchesDashboardTimeFilter(p.data));
 
+            // Corrigir dependência circular - cada filtro usa apenas os outros filtros, não ele mesmo
             const glosasForConv = glosasNoPeriodo.filter(g =>
                 (selectedUnidade ? g.unidade === selectedUnidade : true) &&
-                (selectedColaborador ? g.colaborador === selectedColaborador : true) &&
-                (selectedMotivo ? g.motivo === selectedMotivo : true)
+                (selectedColaborador ? g.colaborador === selectedColaborador : true)
+                // Removido: (selectedMotivo ? g.motivo === selectedMotivo : true)
             );
             const glosasForUnidade = glosasNoPeriodo.filter(g =>
                 (selectedConvenio ? g.convenio === selectedConvenio : true) &&
-                (selectedColaborador ? g.colaborador === selectedColaborador : true) &&
-                (selectedMotivo ? g.motivo === selectedMotivo : true)
+                (selectedColaborador ? g.colaborador === selectedColaborador : true)
+                // Removido: (selectedMotivo ? g.motivo === selectedMotivo : true)
             );
             const glosasForColab = glosasNoPeriodo.filter(g =>
                 (selectedConvenio ? g.convenio === selectedConvenio : true) &&
-                (selectedUnidade ? g.unidade === selectedUnidade : true) &&
-                (selectedMotivo ? g.motivo === selectedMotivo : true)
+                (selectedUnidade ? g.unidade === selectedUnidade : true)
+                // Removido: (selectedMotivo ? g.motivo === selectedMotivo : true)
             );
 
             const conveniosComDados = [...new Set([
@@ -941,6 +952,7 @@
             const colaboradoresComDados = [...new Set(glosasForColab.map(g => g.colaborador))]
                 .filter(Boolean)
                 .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            
             // Calcular motivos com dados usando mesma lógica do ranking (ordenado por volume/quantidade)
             // Usar dados já filtrados por convênio, unidade e colaborador para respeitar outros filtros
             const dadosFiltradosParaMotivo = glosasNoPeriodo.filter(g =>
