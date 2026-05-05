@@ -919,15 +919,18 @@
 
             const glosasForConv = glosasNoPeriodo.filter(g =>
                 (selectedUnidade ? g.unidade === selectedUnidade : true) &&
-                (selectedColaborador ? g.colaborador === selectedColaborador : true)
+                (selectedColaborador ? g.colaborador === selectedColaborador : true) &&
+                (selectedMotivo ? g.motivo === selectedMotivo : true)
             );
             const glosasForUnidade = glosasNoPeriodo.filter(g =>
                 (selectedConvenio ? g.convenio === selectedConvenio : true) &&
-                (selectedColaborador ? g.colaborador === selectedColaborador : true)
+                (selectedColaborador ? g.colaborador === selectedColaborador : true) &&
+                (selectedMotivo ? g.motivo === selectedMotivo : true)
             );
             const glosasForColab = glosasNoPeriodo.filter(g =>
                 (selectedConvenio ? g.convenio === selectedConvenio : true) &&
-                (selectedUnidade ? g.unidade === selectedUnidade : true)
+                (selectedUnidade ? g.unidade === selectedUnidade : true) &&
+                (selectedMotivo ? g.motivo === selectedMotivo : true)
             );
 
             const conveniosComDados = [...new Set([
