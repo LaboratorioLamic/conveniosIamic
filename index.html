@@ -30,6 +30,31 @@
         ::-webkit-scrollbar-thumb { background: #172554; border-radius: 10px; }
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
         @keyframes spinLoader { to { transform: rotate(360deg); } }
+        
+        /* Animações para o modal de data */
+        #modal-date-range {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* Efeito hover nos botões de data */
+        .date-filter-btn:hover .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+        
+        .date-filter-btn .fa-chevron-down {
+            transition: transform 0.2s ease;
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] font-sans text-slate-800 h-screen flex flex-col overflow-hidden">
@@ -276,10 +301,21 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-8">
                         <div class="relative">
                             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             <input type="text" id="table-search" onkeyup="renderTable()" placeholder="Buscar Paciente ou Lote..." class="w-full pl-11 pr-4 py-3 bg-white border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 shadow-sm">
+                        </div>
+                        <div class="relative">
+                            <button onclick="openDateRangeModal()" id="table-date-filter-btn" class="date-filter-btn w-full px-4 py-3 bg-white border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm hover:border-blue-400 hover:bg-blue-50 transition-all text-left flex items-center justify-between group">
+                                <span class="flex items-center">
+                                    <i class="fas fa-calendar-alt mr-2 text-blue-500 group-hover:text-blue-600"></i>
+                                    <span id="table-date-display">Filtrar por Data</span>
+                                </span>
+                                <i class="fas fa-chevron-down text-slate-400 group-hover:text-blue-500 transition-transform"></i>
+                            </button>
+                            <input type="hidden" id="table-date-start">
+                            <input type="hidden" id="table-date-end">
                         </div>
                         <select id="table-filter-conv" onchange="updateTableFilters(); renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm dynamic-select-convenio">
                             <option value="">Todos os Convênios</option>
@@ -405,6 +441,68 @@
                 </div>
             </div>
         </section>
+    <!-- Modal de Seleção de Intervalo de Datas -->
+    <div id="modal-date-range" class="modal fixed inset-0 bg-navy-900/90 backdrop-blur-md z-[100] justify-center items-center p-4">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-black uppercase tracking-tight text-xl">Filtrar por Data</h3>
+                        <p class="text-[10px] text-blue-100 font-bold uppercase tracking-widest mt-1">Selecione o período desejado</p>
+                    </div>
+                    <button onclick="closeDateRangeModal()" class="h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-all">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-8">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 flex items-center">
+                            <i class="fas fa-calendar-day mr-2 text-blue-500"></i>
+                            Data Início
+                        </label>
+                        <input type="date" id="date-range-start" class="w-full px-4 py-3 border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 flex items-center">
+                            <i class="fas fa-calendar-check mr-2 text-blue-500"></i>
+                            Data Fim
+                        </label>
+                        <input type="date" id="date-range-end" class="w-full px-4 py-3 border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 shadow-sm">
+                    </div>
+                    
+                    <!-- Botões de Ação Rápida -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="setQuickDateRange('today')" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-black text-[10px] tracking-wider transition-all">
+                            <i class="fas fa-calendar-day mr-2"></i>Hoje
+                        </button>
+                        <button onclick="setQuickDateRange('year')" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-black text-[10px] tracking-wider transition-all">
+                            <i class="fas fa-calendar mr-2"></i>Este Ano
+                        </button>
+                        <button onclick="setQuickDateRange('month')" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-black text-[10px] tracking-wider transition-all">
+                            <i class="fas fa-calendar-alt mr-2"></i>Este Mês
+                        </button>
+                        <button onclick="setQuickDateRange('lastMonth')" class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-black text-[10px] tracking-wider transition-all">
+                            <i class="fas fa-calendar-alt mr-2"></i>Mês Passado
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-8">
+                    <button onclick="applyDateRangeFilter()" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-black text-[10px] tracking-wider shadow-lg transition-all">
+                        <i class="fas fa-check mr-2"></i>Aplicar Filtro
+                    </button>
+                    <button onclick="resetDateRangeFilter()" class="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-black text-[10px] tracking-wider transition-all">
+                        <i class="fas fa-redo mr-2"></i>Resetar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     </main>
 
     <div id="modal-record" class="modal fixed inset-0 bg-navy-900/90 backdrop-blur-md z-[100] justify-center items-center p-4 overflow-y-auto">
@@ -640,6 +738,9 @@
             await waitForInitialChartsReady();
             setInitialLoadingState(false);
             setupRealtimeSync();
+            
+            // Inicializar display do filtro de data
+            updateDateFilterDisplay();
         };
 
         function normalizeString(str) {
@@ -1582,6 +1683,8 @@
             const filterConv = document.getElementById('table-filter-conv').value;
             const filterUni = document.getElementById('table-filter-uni').value;
             const filterColab = document.getElementById('table-filter-colab').value;
+            const filterDateStart = document.getElementById('table-date-start').value;
+            const filterDateEnd = document.getElementById('table-date-end').value;
 
             body.innerHTML = '';
             
@@ -1590,7 +1693,16 @@
                 const matchConv = filterConv === "" || g.convenio === filterConv;
                 const matchUni = filterUni === "" || g.unidade === filterUni;
                 const matchColab = filterColab === "" || g.colaborador === filterColab;
-                return matchSearch && matchConv && matchUni && matchColab;
+                
+                // Filtro de data
+                let matchDate = true;
+                if (filterDateStart || filterDateEnd) {
+                    const itemDate = g.data; // Formato YYYY-MM-DD
+                    if (filterDateStart && itemDate < filterDateStart) matchDate = false;
+                    if (filterDateEnd && itemDate > filterDateEnd) matchDate = false;
+                }
+                
+                return matchSearch && matchConv && matchUni && matchColab && matchDate;
             });
 
             const sortedData = filteredData.sort((a,b) => new Date(b.data) - new Date(a.data));
@@ -1992,6 +2104,122 @@
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
+        }
+
+        // ================= FUNÇÕES DO FILTRO DE DATA ================= //
+        function openDateRangeModal() {
+            document.getElementById('modal-date-range').classList.add('active');
+            
+            // Carregar datas atuais se houver filtro aplicado
+            const currentStart = document.getElementById('table-date-start').value;
+            const currentEnd = document.getElementById('table-date-end').value;
+            
+            if (currentStart) document.getElementById('date-range-start').value = currentStart;
+            if (currentEnd) document.getElementById('date-range-end').value = currentEnd;
+        }
+
+        function closeDateRangeModal() {
+            document.getElementById('modal-date-range').classList.remove('active');
+        }
+
+        function setQuickDateRange(range) {
+            const today = new Date();
+            const startDate = new Date(today);
+            const endDate = new Date(today);
+            
+            switch(range) {
+                case 'today':
+                    // Hoje - mesmo dia
+                    break;
+                case 'month':
+                    // Este mês - primeiro dia
+                    startDate.setDate(1);
+                    break;
+                case 'lastMonth':
+                    // Mês passado - primeiro e último dia do mês passado
+                    startDate.setMonth(today.getMonth() - 1, 1);
+                    endDate.setMonth(today.getMonth(), 0); // Último dia do mês passado
+                    break;
+                case 'year':
+                    // Este ano - primeiro dia do ano
+                    startDate.setMonth(0, 1);
+                    break;
+            }
+            
+            document.getElementById('date-range-start').value = formatDateForInput(startDate);
+            document.getElementById('date-range-end').value = formatDateForInput(endDate);
+        }
+
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function applyDateRangeFilter() {
+            const startDate = document.getElementById('date-range-start').value;
+            const endDate = document.getElementById('date-range-end').value;
+            
+            if (!startDate && !endDate) {
+                alert('Selecione pelo menos uma data para aplicar o filtro.');
+                return;
+            }
+            
+            if (startDate && endDate && startDate > endDate) {
+                alert('A data de início não pode ser maior que a data de fim.');
+                return;
+            }
+            
+            // Aplicar filtro
+            document.getElementById('table-date-start').value = startDate;
+            document.getElementById('table-date-end').value = endDate;
+            
+            // Atualizar display
+            updateDateFilterDisplay();
+            
+            // Fechar modal e renderizar tabela
+            closeDateRangeModal();
+            renderTable();
+        }
+
+        function resetDateRangeFilter() {
+            document.getElementById('table-date-start').value = '';
+            document.getElementById('table-date-end').value = '';
+            document.getElementById('date-range-start').value = '';
+            document.getElementById('date-range-end').value = '';
+            
+            updateDateFilterDisplay();
+            closeDateRangeModal();
+            renderTable();
+        }
+
+        function updateDateFilterDisplay() {
+            const startDate = document.getElementById('table-date-start').value;
+            const endDate = document.getElementById('table-date-end').value;
+            const displayElement = document.getElementById('table-date-display');
+            const buttonElement = document.getElementById('table-date-filter-btn');
+            
+            if (!startDate && !endDate) {
+                displayElement.textContent = 'Filtrar por Data';
+                buttonElement.classList.remove('bg-blue-50', 'border-blue-400');
+                buttonElement.classList.add('bg-white', 'border-slate-200');
+            } else {
+                if (startDate && endDate) {
+                    const startFormatted = new Date(startDate).toLocaleDateString('pt-BR');
+                    const endFormatted = new Date(endDate).toLocaleDateString('pt-BR');
+                    displayElement.textContent = `${startFormatted} - ${endFormatted}`;
+                } else if (startDate) {
+                    const startFormatted = new Date(startDate).toLocaleDateString('pt-BR');
+                    displayElement.textContent = `A partir de ${startFormatted}`;
+                } else {
+                    const endFormatted = new Date(endDate).toLocaleDateString('pt-BR');
+                    displayElement.textContent = `Até ${endFormatted}`;
+                }
+                
+                buttonElement.classList.remove('bg-white', 'border-slate-200');
+                buttonElement.classList.add('bg-blue-50', 'border-blue-400');
+            }
         }
 
         function uploadBackup() {
