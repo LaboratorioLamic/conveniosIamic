@@ -1959,7 +1959,7 @@
                 const items = listas[key].slice().sort((a, b) => a.localeCompare(b, 'pt-BR'));
                 document.querySelectorAll(`.${cls}`).forEach(s => {
                     const val = s.value;
-                    const options = all ? `<option value="">${cls.includes('convenio') ? 'Todos os Convênios' : cls.includes('unidade') ? 'Todas as Unidades' : 'Todos os Colaboradores'}</option>` : '';
+                    const options = all ? `<option value="">${cls.includes('convenio') ? 'Todos os Convênios' : cls.includes('unidade') ? 'Todas as Unidades' : cls.includes('motivos') ? 'Todos os Motivos' : 'Todos os Colaboradores'}</option>` : '';
                     s.innerHTML = options + items.map(i => `<option value="${i}">${i}</option>`).join('');
                     if (val && items.includes(val)) s.value = val;
                 });
@@ -1974,7 +1974,7 @@
             fillSelect('dynamic-select-convenio', 'convenios', true);
             fillSelect('dynamic-select-unidade', 'unidades', true);
             fillSelect('dynamic-select-colaborador', 'colaboradores', true);
-            fillSelect('dynamic-select-motivos', 'motivos', false);
+            fillSelect('dynamic-select-motivos', 'motivos', true);
             fillDatalist('reg-colaborador-list', 'colaboradores');
         }
 
