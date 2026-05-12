@@ -78,10 +78,7 @@
                 <button onclick="switchTab('dados')" id="btn-dados" class="px-6 py-2.5 rounded-lg hover:bg-navy-700 transition-all font-bold text-xs tracking-widest ml-1">
                     <i class="fas fa-table-list mr-2"></i>DADOS
                 </button>
-                <button onclick="switchTab('pagos')" id="btn-pagos" class="px-6 py-2.5 rounded-lg hover:bg-navy-700 transition-all font-bold text-xs tracking-widest ml-1">
-                    <i class="fas fa-file-invoice-dollar mr-2"></i>PAGOS
-                </button>
-                <button onclick="switchTab('backup')" id="btn-backup" title="Backup" class="px-4 py-2.5 rounded-lg hover:bg-navy-700 transition-all font-bold text-xs tracking-widest ml-1">
+                                <button onclick="switchTab('backup')" id="btn-backup" title="Backup" class="px-4 py-2.5 rounded-lg hover:bg-navy-700 transition-all font-bold text-xs tracking-widest ml-1">
                     <i class="fas fa-gear"></i>
                 </button>
             </nav>
@@ -171,9 +168,9 @@
                     <p class="text-blue-300 text-[10px] font-bold uppercase tracking-widest relative z-10">Eficiência</p>
                     <p id="kpi-taxa" class="text-2xl font-black mt-1 relative z-10">0%</p>
                 </div>
-                <div class="bg-green-600 p-6 rounded-2xl shadow-xl text-white relative overflow-hidden" title="Percentual do valor acatado que foi efetivamente pago pelos convênios">
+                <div class="bg-green-600 p-6 rounded-2xl shadow-xl text-white relative overflow-hidden" title="Valor total efetivamente pago pelos convênios">
                     <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fas fa-hand-holding-usd text-6xl"></i></div>
-                    <p class="text-green-200 text-[10px] font-bold uppercase tracking-widest relative z-10">Conciliado (Pago)</p>
+                    <p class="text-green-200 text-[10px] font-bold uppercase tracking-widest relative z-10">Valor Pago</p>
                     <p id="kpi-pago" class="text-xl font-black mt-1 relative z-10">R$ 0,00</p>
                 </div>
             </div>
@@ -354,40 +351,7 @@
             </div>
         </section>
 
-        <section id="tab-pagos" class="tab-content container mx-auto">
-            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                <div class="p-6 bg-slate-50 border-b border-slate-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                    <div>
-                        <h2 class="text-2xl font-black text-navy-900 tracking-tighter uppercase">Pagamentos Efetuados</h2>
-                        <p class="text-xs text-slate-400 font-bold">LIVRO CAIXA DOS CONVÊNIOS</p>
-                    </div>
-                    <button onclick="openPagosModal()" class="w-full lg:w-auto px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 font-black text-[10px] tracking-widest shadow-lg transition-all">
-                        <i class="fas fa-plus mr-2"></i>REGISTRAR PAGAMENTO
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-green-700 text-white text-[10px] uppercase tracking-[0.2em] font-black">
-                            <tr>
-                                <th class="p-5 border-b border-green-800 w-32">Data Repasse</th>
-                                <th class="p-5 border-b border-green-800">Convênio / Operadora</th>
-                                <th class="p-5 border-b border-green-800 text-right">Valor Depositado</th>
-                                <th class="p-5 border-b border-green-800 text-center w-32">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-pagos-body" class="text-sm divide-y divide-slate-100">
-                        </tbody>
-                    </table>
-                </div>
-                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500">
-                    <button id="pagos-prev" onclick="changePagosPage(-1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Anterior</button>
-                    <span id="pagos-page-info">Página 1 de 1</span>
-                    <button id="pagos-next" onclick="changePagosPage(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Próxima</button>
-                </div>
-            </div>
-        </section>
-
+        
         <section id="tab-backup" class="tab-content container mx-auto">
             <div class="bg-gradient-to-br from-slate-50 via-white to-blue-50 rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
                 <div class="px-8 py-7 border-b border-slate-200 bg-white/70 backdrop-blur-sm">
@@ -497,6 +461,13 @@
                         <option value="Perdido">Perdido</option>
                     </select>
                 </div>
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Pagamento Recebido</label>
+                    <div class="flex items-center h-12">
+                        <input type="checkbox" id="reg-pago" onchange="togglePagoField()" class="w-5 h-5 text-green-600 border-slate-300 rounded focus:ring-green-500 focus:ring-2">
+                        <label for="reg-pago" class="ml-3 text-sm font-bold text-slate-700 cursor-pointer">Pago</label>
+                    </div>
+                </div>
                 <div class="col-span-3">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Contestação</label>
                     <textarea id="reg-contestacao" rows="4" class="w-full border-slate-200 rounded-xl p-4 shadow-sm text-sm" placeholder="Adicione observações sobre a contestação ou justificativa do motivo..."></textarea>
@@ -506,6 +477,12 @@
                     <textarea id="reg-motivo-perdida" rows="4" class="w-full border-red-200 rounded-xl p-4 shadow-sm text-sm" placeholder="Descreva detalhadamente o motivo pelo qual a glosa foi perdida..."></textarea>
                 </div>
                 
+                <div class="col-span-3 hidden bg-green-50 p-4 rounded-xl border border-green-200" id="box-valor-pago">
+                    <label class="block text-[10px] font-black text-green-800 uppercase mb-2">Valor Pago pelo Convênio (R$)</label>
+                    <input type="number" id="reg-valor-pago" step="0.01" class="w-full border-green-300 rounded-xl py-3 shadow-sm text-green-900 font-bold focus:ring-green-500" placeholder="0.00">
+                    <p class="text-[9px] text-green-700 mt-2 uppercase tracking-widest font-bold"><i class="fas fa-check-circle mr-1"></i>Informe o valor efetivamente recebido do convênio.</p>
+                </div>
+
                 <div class="col-span-3 hidden bg-orange-50 p-4 rounded-xl border border-orange-200" id="box-valor-parcial">
                     <label class="block text-[10px] font-black text-orange-800 uppercase mb-2">Valor Parcial Acatado/Pago (R$)</label>
                     <input type="number" id="reg-valor-parcial" step="0.01" class="w-full border-orange-300 rounded-xl py-3 shadow-sm text-orange-900 font-bold focus:ring-orange-500" placeholder="0.00">
@@ -545,6 +522,28 @@
                 </div>
                 <div class="mt-4 flex gap-3">
                     <button type="submit" class="flex-1 bg-green-600 text-white font-black py-4 rounded-xl hover:bg-green-800 shadow-xl transition-all uppercase tracking-widest text-xs">Salvar Recebimento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-valor-pago" class="modal fixed inset-0 bg-navy-900/90 backdrop-blur-md z-[100] justify-center items-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-white/20">
+            <div class="bg-green-700 p-6 text-white flex justify-between items-center">
+                <div>
+                    <h3 class="font-black uppercase tracking-tight text-xl">Registrar Pagamento</h3>
+                    <p class="text-[10px] text-green-200 font-bold uppercase tracking-widest">Valor Recebido do Convênio</p>
+                </div>
+                <button onclick="closeModals()" class="h-10 w-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="valor-pago-form" onsubmit="saveValorPago(event)" class="p-8 grid grid-cols-1 gap-6">
+                <input type="hidden" id="valor-pago-id">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Valor Pago (R$)</label>
+                    <input type="number" id="valor-pago-valor" step="0.01" required class="w-full border-slate-200 rounded-xl py-3 shadow-sm font-bold text-green-700 text-xl" placeholder="0.00">
+                </div>
+                <div class="mt-4 flex gap-3">
+                    <button type="submit" class="flex-1 bg-green-600 text-white font-black py-4 rounded-xl hover:bg-green-800 shadow-xl transition-all uppercase tracking-widest text-xs">Confirmar Pagamento</button>
                 </div>
             </form>
         </div>
@@ -789,7 +788,6 @@
             updateDropdownsUI();
             updateDashboardFiltersByTime();
             renderTable();
-            renderPagosTable();
             updateTableFilters();
         }
 
@@ -1085,19 +1083,8 @@
                        (motiv ? g.motivo === motiv : true);
             });
 
-            // Filtra Pagamentos (ignora unidade e colaborador, é geral do convênio no período)
-            let filteredPagos = pagamentos.filter(p => {
-                let matchTime = true;
-                if (type === 'all') matchTime = true;
-                else if (type === 'year') matchTime = p.data.startsWith(document.getElementById('dash-year').value);
-                else if (type === 'month') matchTime = p.data.startsWith(document.getElementById('dash-month').value);
-                else if (type === 'range') {
-                    const s = document.getElementById('dash-start').value;
-                    const e = document.getElementById('dash-end').value;
-                    matchTime = (s ? p.data >= s : true) && (e ? p.data <= e : true);
-                }
-                return matchTime && (conv ? p.convenio === conv : true);
-            });
+            // Filtra Pagamentos dos itens marcados como pagos
+            let filteredPagos = filtered.filter(g => g.pago && g.valorPago);
 
             // Lógica de Negócio de KPIs com o Status Parcial
             let total = 0, acatado = 0, contestar = 0, perdido = 0;
@@ -1117,7 +1104,7 @@
             // Calcular quantidade de guias glosadas
             const quantidade = filtered.length;
 
-            let totalPago = filteredPagos.reduce((acc, curr) => acc + curr.valor, 0);
+            let totalPago = filteredPagos.reduce((acc, curr) => acc + curr.valorPago, 0);
             const taxa = total > 0 ? ((acatado / total) * 100).toFixed(1) : 0;
 
             // Conciliado/Pago usa todos os convênios do período, ignorando seleção de colaborador e unidade
@@ -1134,7 +1121,7 @@
             document.getElementById('kpi-contestar').innerText = contestar.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('kpi-perdido').innerText = perdido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             document.getElementById('kpi-taxa').innerText = taxa + '%';
-            document.getElementById('kpi-pago').innerText = percentualPago + '%';
+            document.getElementById('kpi-pago').innerText = totalPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
             renderCharts(filtered, filteredPagos, acatadoConciliacao, totalPago, filteredNoColabNoUnit);
         }
@@ -1666,6 +1653,11 @@
                 let valorRender = g.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                 if(g.status === 'Parcial') {
                     valorRender += `<div class="text-[9px] text-orange-600 font-bold mt-1">Ac: ${g.valorParcial.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>`;
+                    if(g.pago && g.valorPago) {
+                        valorRender += `<div class="text-[9px] text-green-600 font-bold mt-1">Pago: ${g.valorPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>`;
+                    }
+                } else if(g.pago && g.valorPago) {
+                    valorRender += `<div class="text-[9px] text-green-600 font-bold mt-1">Pago: ${g.valorPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>`;
                 }
 
                 tr.innerHTML = `
@@ -1688,6 +1680,7 @@
                     </td>
                     <td class="p-5 text-center">
                         <div class="flex justify-center gap-2">
+                            <button onclick="openValorPagoModal(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center ${g.pago && g.valorPago ? 'bg-green-50 text-green-600 border border-green-200' : 'text-slate-300 hover:bg-slate-100'} transition-all" title="Registrar Pagamento"><i class="fas fa-dollar-sign"></i></button>
                             <button onclick="openContestModal(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center ${g.contestacao ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'text-slate-300 hover:bg-slate-100'} transition-all"><i class="fas fa-clipboard-list"></i></button>
                             <button onclick="openObsModal(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center ${g.obs ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'text-slate-300 hover:bg-slate-100'} transition-all"><i class="fas ${g.obs ? 'fa-comment-dots' : 'fa-comment'}"></i></button>
                             <button onclick="editRecord(${g.id})" class="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-navy-900 hover:text-white transition-all"><i class="fas fa-edit"></i></button>
@@ -1739,6 +1732,8 @@
             const colaborador = document.getElementById('reg-colaborador').value.trim();
             const motivo = document.getElementById('reg-motivo').value;
             const valorParcial = status === 'Parcial' ? (parseFloat(document.getElementById('reg-valor-parcial').value) || 0) : 0;
+            const pagoCheckbox = document.getElementById('reg-pago').checked;
+            const valorPago = pagoCheckbox ? (parseFloat(document.getElementById('reg-valor-pago').value) || 0) : 0;
 
             if (!listas.colaboradores.includes(colaborador)) {
                 alert('Selecione um colaborador válido a partir da lista.');
@@ -1766,7 +1761,9 @@
                 valorParcial: valorParcial,
                 motivo: motivo,
                 contestacao: contestacaoValue,
-                obs: motivoPerdidaValue
+                obs: motivoPerdidaValue,
+                pago: pagoCheckbox,
+                valorPago: valorPago
             };
             if(id) glosas = glosas.map(g => g.id == id ? data : g); else glosas.push(data);
             persistDataToFirebase();
@@ -1777,20 +1774,24 @@
         
         function editRecord(id) {
             const g = glosas.find(x => x.id == id);
+            if (!g) return;
             document.getElementById('reg-id').value = g.id;
             document.getElementById('reg-data').value = g.data;
             document.getElementById('reg-lote').value = g.lote;
             document.getElementById('reg-convenio').value = g.convenio;
             document.getElementById('reg-unidade').value = g.unidade;
-            document.getElementById('reg-paciente').value = g.paciente;
             document.getElementById('reg-colaborador').value = g.colaborador;
+            document.getElementById('reg-paciente').value = g.paciente;
             document.getElementById('reg-motivo').value = g.motivo || '';
             document.getElementById('reg-contestacao').value = g.contestacao || '';
             document.getElementById('reg-motivo-perdida').value = g.obs || '';
             document.getElementById('reg-valor').value = g.valor;
             document.getElementById('reg-status').value = g.status;
+            document.getElementById('reg-pago').checked = g.pago || false;
+            document.getElementById('reg-valor-pago').value = g.valorPago || '';
             
             toggleStatusFields();
+            togglePagoField();
             if(g.status === 'Parcial') document.getElementById('reg-valor-parcial').value = g.valorParcial;
 
             document.getElementById('modal-title').innerText = "Editar Lançamento";
@@ -1832,6 +1833,39 @@
             glosas = glosas.map(g => g.id == id ? {...g, obs: document.getElementById('obs-text').value} : g);
             persistDataToFirebase();
             closeModals(); renderTable();
+        }
+
+        function togglePagoField() {
+            const pagoCheckbox = document.getElementById('reg-pago');
+            const valorPagoBox = document.getElementById('box-valor-pago');
+            
+            if (pagoCheckbox.checked) {
+                valorPagoBox.classList.remove('hidden');
+                document.getElementById('reg-valor-pago').required = true;
+            } else {
+                valorPagoBox.classList.add('hidden');
+                document.getElementById('reg-valor-pago').required = false;
+                document.getElementById('reg-valor-pago').value = '';
+            }
+        }
+
+        function openValorPagoModal(id) {
+            const g = glosas.find(x => x.id == id);
+            if (!g) return;
+            
+            document.getElementById('valor-pago-id').value = g.id;
+            document.getElementById('valor-pago-valor').value = g.valorPago || '';
+            document.getElementById('modal-valor-pago').classList.add('active');
+        }
+
+        function saveValorPago(e) {
+            e.preventDefault();
+            const id = document.getElementById('valor-pago-id').value;
+            const valorPago = parseFloat(document.getElementById('valor-pago-valor').value);
+            
+            glosas = glosas.map(g => g.id == id ? {...g, pago: true, valorPago: valorPago} : g);
+            persistDataToFirebase();
+            closeModals(); renderTable(); updateDashboard();
         }
 
         // ================= ABA PAGOS (LIVRO CAIXA) ================= //
@@ -1897,14 +1931,13 @@
             };
             if(id) pagamentos = pagamentos.map(p => p.id == id ? data : p); else pagamentos.push(data);
             persistDataToFirebase();
-            closeModals(); renderPagosTable(); updateDashboard();
+            closeModals(); updateDashboard();
         }
 
         function deletePagamento(id) { 
             if(confirm("Deseja apagar este registro financeiro? O indicador de conciliação será afetado.")) { 
                 pagamentos = pagamentos.filter(p => p.id !== id); 
                 persistDataToFirebase();
-                renderPagosTable(); 
                 updateDashboard(); 
             } 
         }
@@ -2088,7 +2121,6 @@
 
                     updateDropdownsUI();
                     renderTable();
-                    renderPagosTable();
                     updateDashboard();
                     input.value = '';
                     alert("Backup carregado com sucesso. Todos os dados foram substituídos.");
