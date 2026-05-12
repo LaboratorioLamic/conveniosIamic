@@ -1249,11 +1249,16 @@
 
             // chartCompare original: Glosado vs Acatado
             const glosadoData = concilConvs.map(c => data.filter(g => g.convenio === c).reduce((a, b) => a + b.valor, 0));
+            const acatadoData = concilConvs.map(c => data.filter(g => g.convenio === c).reduce((acc, g) => {
+                if(g.status === 'Acatado') return acc + g.valor;
+                if(g.status === 'Parcial') return acc + g.valorParcial;
+                return acc;
+            }, 0));
             refreshChart('chartCompare', 'bar', {
                 labels: concilConvs,
                 datasets: [
                     { label: 'Total Glosado', data: glosadoData, backgroundColor: '#172554', borderRadius: 5 },
-                    { label: 'Total Acatado', data: acatadoPorConv, backgroundColor: '#3b82f6', borderRadius: 5 }
+                    { label: 'Total Acatado', data: acatadoData, backgroundColor: '#3b82f6', borderRadius: 5 }
                 ]
             });
 
