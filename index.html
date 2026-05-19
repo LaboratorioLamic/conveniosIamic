@@ -1107,9 +1107,8 @@
             let totalPago = filteredPagos.reduce((acc, curr) => acc + curr.valorPago, 0);
             const taxa = total > 0 ? ((acatado / total) * 100).toFixed(1) : 0;
 
-            // Conciliado/Pago usa todos os convênios do período, ignorando seleção de colaborador e unidade
             let acatadoConciliacao = 0;
-            filteredNoColabNoUnit.forEach(g => {
+            filtered.forEach(g => {
                 if(g.status === 'Acatado') acatadoConciliacao += g.valor;
                 else if(g.status === 'Parcial') acatadoConciliacao += g.valorParcial;
             });
@@ -1123,7 +1122,7 @@
             document.getElementById('kpi-taxa').innerText = taxa + '%';
             document.getElementById('kpi-pago').innerText = totalPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-            renderCharts(filtered, filteredPagos, acatadoConciliacao, totalPago, filteredNoColabNoUnit);
+            renderCharts(filtered, filteredPagos, acatadoConciliacao, totalPago, filtered);
         }
 
         function renderCharts(data, pagamentosData, totalAcatadoGeral, totalPagoGeral, conciliationData = data) {
