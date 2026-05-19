@@ -297,7 +297,7 @@
                     </div>
 
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 flex-1">
                             <div class="relative">
                                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                                 <input type="text" id="table-search" onkeyup="renderTable()" placeholder="Buscar Paciente ou Lote..." class="w-full pl-11 pr-4 py-3 bg-white border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 shadow-sm">
@@ -316,6 +316,15 @@
                             </select>
                             <select id="table-filter-colab" onchange="updateTableFilters(); renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm dynamic-select-colaborador">
                                 <option value="">Todos os Colaboradores</option>
+                            </select>
+                            <select id="table-filter-status" onchange="renderTable()" class="border-slate-200 rounded-xl text-sm font-bold text-slate-600 shadow-sm">
+                                <option value="">Todos os Status</option>
+                                <option value="A contestar">A contestar</option>
+                                <option value="Contestado">Contestado</option>
+                                <option value="Acatado">Acatado</option>
+                                <option value="Parcial">Parcial</option>
+                                <option value="Recontestar">Recontestar</option>
+                                <option value="Perdido">Perdido</option>
                             </select>
                         </div>
                         <div class="lg:ml-4 flex justify-end">
@@ -458,6 +467,7 @@
                         <option value="Contestado">Contestado</option>
                         <option value="Acatado">Acatado</option>
                         <option value="Parcial">Parcial</option>
+                        <option value="Recontestar">Recontestar</option>
                         <option value="Perdido">Perdido</option>
                     </select>
                 </div>
@@ -1096,7 +1106,7 @@
                     acatado += g.valorParcial;
                     perdido += (g.valor - g.valorParcial);
                 }
-                else { // A contestar ou Contestado
+                else { // A contestar, Contestado ou Recontestar
                     contestar += g.valor;
                 }
             });
@@ -1126,7 +1136,7 @@
         }
 
         function renderCharts(data, pagamentosData, totalAcatadoGeral, totalPagoGeral, conciliationData = data) {
-            const statusConfig = { "A contestar": "#fde047", "Contestado": "#60a5fa", "Acatado": "#22c55e", "Parcial": "#fb923c", "Perdido": "#ef4444" };
+            const statusConfig = { "A contestar": "#fde047", "Contestado": "#60a5fa", "Acatado": "#22c55e", "Parcial": "#fb923c", "Recontestar": "#fb923c", "Perdido": "#ef4444" };
             
             // --- Novos Gráficos: Acatado vs Pago (Conciliação) --- //
             
@@ -1174,7 +1184,13 @@
 
             // --- Gráficos Originais Ajustados --- //
 
-            const statusMap = data.reduce((acc, curr) => { acc[curr.status] = (acc[curr.status] || 0) + curr.valor; return acc; }, {});
+            // Agrupar "Recontestar" como "A contestar" nos gráficos
+            const statusMapRaw = data.reduce((acc, curr) => { 
+                const displayStatus = (curr.status === 'Recontestar') ? 'A contestar' : curr.status;
+                acc[displayStatus] = (acc[displayStatus] || 0) + curr.valor; 
+                return acc; 
+            }, {});
+            const statusMap = statusMapRaw;
             const statusLabels = Object.keys(statusMap);
             const statusValues = Object.values(statusMap);
             const statusTotal = statusValues.reduce((sum, val) => sum + val, 0);
@@ -1380,12 +1396,14 @@
             const tableFilterConv = document.getElementById('table-filter-conv');
             const tableFilterUni = document.getElementById('table-filter-uni');
             const tableFilterColab = document.getElementById('table-filter-colab');
+            const tableFilterStatus = document.getElementById('table-filter-status');
 
             if (tableSearch) tableSearch.value = '';
             if (tableFilterDate) tableFilterDate.value = '';
             if (tableFilterConv) tableFilterConv.value = '';
             if (tableFilterUni) tableFilterUni.value = '';
             if (tableFilterColab) tableFilterColab.value = '';
+            if (tableFilterStatus) tableFilterStatus.value = '';
 
             // Resetar página para a primeira
             dadosPage = 1;
@@ -1613,11 +1631,15 @@
                 const filterConv = document.getElementById('table-filter-conv').value;
                 const filterUni = document.getElementById('table-filter-uni').value;
                 const filterColab = document.getElementById('table-filter-colab').value;
+                const filterDate = document.getElementById('table-filter-date').value;
+                const filterStatus = document.getElementById('table-filter-status').value;
                 const matchSearch = normalizeString(g.paciente).includes(searchQuery) || normalizeString(g.lote).includes(searchQuery);
                 const matchConv = filterConv === "" || g.convenio === filterConv;
                 const matchUni = filterUni === "" || g.unidade === filterUni;
                 const matchColab = filterColab === "" || g.colaborador === filterColab;
-                return matchSearch && matchConv && matchUni && matchColab;
+                const matchDate = filterDate === "" || g.data.startsWith(filterDate);
+                const matchStatus = filterStatus === "" || g.status === filterStatus;
+                return matchSearch && matchConv && matchUni && matchColab && matchDate && matchStatus;
             }).length;
             const totalPages = Math.max(1, Math.ceil(totalItems / tablePageSize));
             dadosPage = Math.min(totalPages, Math.max(1, dadosPage + direction));
@@ -1631,6 +1653,7 @@
             const filterUni = document.getElementById('table-filter-uni').value;
             const filterColab = document.getElementById('table-filter-colab').value;
             const filterDate = document.getElementById('table-filter-date').value;
+            const filterStatus = document.getElementById('table-filter-status').value;
 
             body.innerHTML = '';
             
@@ -1640,7 +1663,8 @@
                 const matchUni = filterUni === "" || g.unidade === filterUni;
                 const matchColab = filterColab === "" || g.colaborador === filterColab;
                 const matchDate = filterDate === "" || g.data.startsWith(filterDate);
-                return matchSearch && matchConv && matchUni && matchColab && matchDate;
+                const matchStatus = filterStatus === "" || g.status === filterStatus;
+                return matchSearch && matchConv && matchUni && matchColab && matchDate && matchStatus;
             });
 
             const sortedData = filteredData.sort((a,b) => new Date(b.data) - new Date(a.data));
@@ -1711,6 +1735,7 @@
                 "Contestado": "bg-blue-50 text-blue-700 border-blue-200", 
                 "Acatado": "bg-green-50 text-green-700 border-green-200", 
                 "Parcial": "bg-orange-50 text-orange-700 border-orange-200", 
+                "Recontestar": "bg-orange-50 text-orange-700 border-orange-200",
                 "Perdido": "bg-red-50 text-red-700 border-red-200" 
             };
             return config[s] || "";
