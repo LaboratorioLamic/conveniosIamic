@@ -261,9 +261,9 @@
             </div>
             <div class="grid grid-cols-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-6">
                 <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-list-ol text-blue-500"></i> Ranking de Volume de Glosas por Motivo</h3>
-                <div class="overflow-auto border border-slate-100 rounded-xl">
+                <div class="overflow-auto border border-slate-100 rounded-xl max-h-96">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-[0.15em] font-black sticky top-0">
+                        <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-[0.15em] font-black sticky top-0 z-10">
                             <tr>
                                 <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
                                 <th class="p-3 border-b border-slate-200">Motivo</th>
@@ -273,6 +273,24 @@
                             </tr>
                         </thead>
                         <tbody id="motivo-ranking-body" class="text-sm divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-6">
+                <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-list-ol text-red-500"></i> Ranking de Volume de Glosas Perdidas por Motivo</h3>
+                <div class="overflow-auto border border-slate-100 rounded-xl max-h-96">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-[0.15em] font-black sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
+                                <th class="p-3 border-b border-slate-200">Motivo</th>
+                                <th class="p-3 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortMotivoPerdidoRanking('volume')">Volume de Glosa</th>
+                                <th class="p-3 border-b border-slate-200 text-right w-36 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortMotivoPerdidoRanking('valor')">Valor</th>
+                                <th class="p-3 border-b border-slate-200 w-48">Proporção</th>
+                            </tr>
+                        </thead>
+                        <tbody id="motivo-perdido-ranking-body" class="text-sm divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -653,6 +671,11 @@
         const motivoRankingPageSize = 8;
         let motivoSortField = 'volume';
         let motivoSortOrder = 'desc';
+        let motivoPerdidoRanking = [];
+        let motivoPerdidoRankingPage = 1;
+        const motivoPerdidoRankingPageSize = 8;
+        let motivoPerdidoSortField = 'volume';
+        let motivoPerdidoSortOrder = 'desc';
         let dadosPage = 1;
         let pagosPage = 1;
         const tablePageSize = 20;
@@ -1313,6 +1336,20 @@
                 .sort((a, b) => b.volume - a.volume);
             motivoRankingPage = 1;
             renderMotivoRankingTable();
+
+            // Compute motivo ranking for "Perdido" status only
+            const motivoPerdidoMap = data.filter(g => g.status === 'Perdido').reduce((acc, curr) => {
+                const key = curr.motivo || 'Sem Motivo';
+                if (!acc[key]) acc[key] = { valor: 0, volume: 0 };
+                acc[key].valor += curr.valor;
+                acc[key].volume += 1;
+                return acc;
+            }, {});
+            motivoPerdidoRanking = Object.entries(motivoPerdidoMap)
+                .map(([nome, { valor, volume }]) => ({ nome, valor, volume }))
+                .sort((a, b) => b.volume - a.volume);
+            motivoPerdidoRankingPage = 1;
+            renderMotivoPerdidoRankingTable();
         }
 
         function renderMotivoRankingTable() {
@@ -1342,6 +1379,52 @@
                 if (posicao === 1) barColor = 'bg-green-500';
                 else if (posicao === 2) barColor = 'bg-blue-400';
                 else if (posicao === 3) barColor = 'bg-blue-300';
+                
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
+                    <td class="p-3 font-bold text-slate-700">${item.nome}</td>
+                    <td class="p-3">${item.volume}</td>
+                    <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 bg-slate-100 rounded-full h-6 relative overflow-hidden">
+                                <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width: ${barWidth}%"></div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-600 min-w-[3rem] text-right">${percentage}%</span>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function renderMotivoPerdidoRankingTable() {
+            const body = document.getElementById('motivo-perdido-ranking-body');
+            if (!body) return;
+
+            body.innerHTML = '';
+
+            if (!motivoPerdidoRanking.length) {
+                body.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados de glosas perdidas para o período selecionado</td></tr>`;
+                return;
+            }
+
+            // Calculate total for proportion calculation based on current sort field
+            const totalField = motivoPerdidoRanking.reduce((sum, item) => sum + item[motivoPerdidoSortField], 0);
+            const maxField = Math.max(...motivoPerdidoRanking.map(item => item[motivoPerdidoSortField]));
+
+            motivoPerdidoRanking.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const posicao = index + 1;
+                const fieldValue = item[motivoPerdidoSortField];
+                const percentage = ((fieldValue / totalField) * 100).toFixed(1);
+                const barWidth = (fieldValue / maxField) * 100; // For visual bar width
+                
+                // Determine bar color based on position
+                let barColor = 'bg-red-500';
+                if (posicao === 1) barColor = 'bg-red-600';
+                else if (posicao === 2) barColor = 'bg-red-400';
+                else if (posicao === 3) barColor = 'bg-red-300';
                 
                 tr.innerHTML = `
                     <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
@@ -1622,6 +1705,30 @@
             });
             
             renderMotivoRankingTable();
+        }
+
+        function sortMotivoPerdidoRanking(field) {
+            if (motivoPerdidoSortField === field) {
+                motivoPerdidoSortOrder = motivoPerdidoSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                motivoPerdidoSortField = field;
+                motivoPerdidoSortOrder = 'desc';
+            }
+            
+            motivoPerdidoRanking.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+                
+                if (field === 'nome') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                    return motivoPerdidoSortOrder === 'asc' ? aVal.localeCompare(bVal, 'pt-BR') : bVal.localeCompare(aVal, 'pt-BR');
+                } else {
+                    return motivoPerdidoSortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+            });
+            
+            renderMotivoPerdidoRankingTable();
         }
 
         // ================= TABELA GLOSAS ================= //
