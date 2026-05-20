@@ -1187,7 +1187,7 @@
                 return acc;
             }, 0));
 
-            const pagoPorConv = concilConvs.map(c => pagamentosData.filter(p => p.convenio === c).reduce((acc, p) => acc + p.valor, 0));
+            const pagoPorConv = concilConvs.map(c => pagamentosData.filter(p => p.convenio === c).reduce((acc, p) => acc + p.valorPago, 0));
 
             const convsComDados = concilConvs.filter((_, idx) => acatadoPorConv[idx] > 0 || pagoPorConv[idx] > 0);
             const acatadoPorConvComDados = convsComDados.map(c => conciliationData.filter(g => g.convenio === c).reduce((acc, g) => {
@@ -1195,7 +1195,7 @@
                 if(g.status === 'Parcial') return acc + g.valorParcial;
                 return acc;
             }, 0));
-            const pagoPorConvComDados = convsComDados.map(c => pagamentosData.filter(p => p.convenio === c).reduce((acc, p) => acc + p.valor, 0));
+            const pagoPorConvComDados = convsComDados.map(c => pagamentosData.filter(p => p.convenio === c).reduce((acc, p) => acc + p.valorPago, 0));
 
             refreshChart('chartConciliacaoBar', 'bar', {
                 labels: convsComDados,
@@ -1207,11 +1207,17 @@
 
             // --- Gráficos Originais Ajustados --- //
 
-            // Agrupar "Recontestar" como "A contestar" nos gráficos
-            const statusMapRaw = data.reduce((acc, curr) => { 
-                const displayStatus = (curr.status === 'Recontestar') ? 'A contestar' : curr.status;
-                acc[displayStatus] = (acc[displayStatus] || 0) + curr.valor; 
-                return acc; 
+            // Agrupar "Recontestar" como "A contestar" e dividir "Parcial" entre Acatado e Perdido (igual aos KPIs)
+            const statusMapRaw = data.reduce((acc, curr) => {
+                if (curr.status === 'Recontestar') {
+                    acc['A contestar'] = (acc['A contestar'] || 0) + curr.valor;
+                } else if (curr.status === 'Parcial') {
+                    acc['Acatado'] = (acc['Acatado'] || 0) + (curr.valorParcial || 0);
+                    acc['Perdido'] = (acc['Perdido'] || 0) + (curr.valor - (curr.valorParcial || 0));
+                } else {
+                    acc[curr.status] = (acc[curr.status] || 0) + curr.valor;
+                }
+                return acc;
             }, {});
             const statusMap = statusMapRaw;
             const statusLabels = Object.keys(statusMap);
