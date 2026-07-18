@@ -294,6 +294,24 @@
                     </table>
                 </div>
             </div>
+
+            <div class="grid grid-cols-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-6">
+                <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-list-ol text-slate-500"></i> Ranking de Volume de Glosas Isentas por Motivo</h3>
+                <div class="overflow-auto border border-slate-100 rounded-xl max-h-96">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-[0.15em] font-black sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3 border-b border-slate-200 w-12 text-center">#</th>
+                                <th class="p-3 border-b border-slate-200">Motivo</th>
+                                <th class="p-3 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortMotivoIsentoRanking('volume')">Volume de Glosa</th>
+                                <th class="p-3 border-b border-slate-200 text-right w-36 cursor-pointer hover:bg-slate-100 transition-colors" onclick="sortMotivoIsentoRanking('valor')">Valor</th>
+                                <th class="p-3 border-b border-slate-200 w-48">Proporção</th>
+                            </tr>
+                        </thead>
+                        <tbody id="motivo-isento-ranking-body" class="text-sm divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
         </section>
 
         <section id="tab-dados" class="tab-content container mx-auto">
@@ -678,6 +696,11 @@
         const motivoPerdidoRankingPageSize = 8;
         let motivoPerdidoSortField = 'volume';
         let motivoPerdidoSortOrder = 'desc';
+        let motivoIsentoRanking = [];
+        let motivoIsentoRankingPage = 1;
+        const motivoIsentoRankingPageSize = 8;
+        let motivoIsentoSortField = 'volume';
+        let motivoIsentoSortOrder = 'desc';
         let dadosPage = 1;
         let pagosPage = 1;
         const tablePageSize = 20;
@@ -1344,8 +1367,8 @@
             unidadeRankingPage = 1;
             renderUnidadeRankingTable();
 
-            // Compute motivo ranking with volume count
-            const motivoVolumeMap = data.reduce((acc, curr) => {
+            // Compute motivo ranking with volume count (glosas isentas ficam no ranking próprio)
+            const motivoVolumeMap = data.filter(g => g.status !== 'Isento').reduce((acc, curr) => {
                 const key = curr.motivo || 'Sem Motivo';
                 if (!acc[key]) acc[key] = { valor: 0, volume: 0 };
                 acc[key].valor += curr.valor;
@@ -1371,6 +1394,20 @@
                 .sort((a, b) => b.volume - a.volume);
             motivoPerdidoRankingPage = 1;
             renderMotivoPerdidoRankingTable();
+
+            // Compute motivo ranking for "Isento" status only
+            const motivoIsentoMap = data.filter(g => g.status === 'Isento').reduce((acc, curr) => {
+                const key = curr.motivo || 'Sem Motivo';
+                if (!acc[key]) acc[key] = { valor: 0, volume: 0 };
+                acc[key].valor += curr.valor;
+                acc[key].volume += 1;
+                return acc;
+            }, {});
+            motivoIsentoRanking = Object.entries(motivoIsentoMap)
+                .map(([nome, { valor, volume }]) => ({ nome, valor, volume }))
+                .sort((a, b) => b.volume - a.volume);
+            motivoIsentoRankingPage = 1;
+            renderMotivoIsentoRankingTable();
         }
 
         function renderMotivoRankingTable() {
@@ -1447,6 +1484,52 @@
                 else if (posicao === 2) barColor = 'bg-red-400';
                 else if (posicao === 3) barColor = 'bg-red-300';
                 
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
+                    <td class="p-3 font-bold text-slate-700">${item.nome}</td>
+                    <td class="p-3">${item.volume}</td>
+                    <td class="p-3 text-right font-black text-navy-900">${item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 bg-slate-100 rounded-full h-6 relative overflow-hidden">
+                                <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width: ${barWidth}%"></div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-600 min-w-[3rem] text-right">${percentage}%</span>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function renderMotivoIsentoRankingTable() {
+            const body = document.getElementById('motivo-isento-ranking-body');
+            if (!body) return;
+
+            body.innerHTML = '';
+
+            if (!motivoIsentoRanking.length) {
+                body.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">Sem dados de glosas isentas para o período selecionado</td></tr>`;
+                return;
+            }
+
+            // Calculate total for proportion calculation based on current sort field
+            const totalField = motivoIsentoRanking.reduce((sum, item) => sum + item[motivoIsentoSortField], 0);
+            const maxField = Math.max(...motivoIsentoRanking.map(item => item[motivoIsentoSortField]));
+
+            motivoIsentoRanking.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const posicao = index + 1;
+                const fieldValue = item[motivoIsentoSortField];
+                const percentage = ((fieldValue / totalField) * 100).toFixed(1);
+                const barWidth = (fieldValue / maxField) * 100; // For visual bar width
+
+                // Determine bar color based on position
+                let barColor = 'bg-slate-500';
+                if (posicao === 1) barColor = 'bg-slate-600';
+                else if (posicao === 2) barColor = 'bg-slate-400';
+                else if (posicao === 3) barColor = 'bg-slate-300';
+
                 tr.innerHTML = `
                     <td class="p-3 text-center font-black text-slate-400">${posicao}</td>
                     <td class="p-3 font-bold text-slate-700">${item.nome}</td>
@@ -1750,6 +1833,30 @@
             });
             
             renderMotivoPerdidoRankingTable();
+        }
+
+        function sortMotivoIsentoRanking(field) {
+            if (motivoIsentoSortField === field) {
+                motivoIsentoSortOrder = motivoIsentoSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                motivoIsentoSortField = field;
+                motivoIsentoSortOrder = 'desc';
+            }
+
+            motivoIsentoRanking.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+
+                if (field === 'nome') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                    return motivoIsentoSortOrder === 'asc' ? aVal.localeCompare(bVal, 'pt-BR') : bVal.localeCompare(aVal, 'pt-BR');
+                } else {
+                    return motivoIsentoSortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+            });
+
+            renderMotivoIsentoRankingTable();
         }
 
         // ================= TABELA GLOSAS ================= //
