@@ -343,6 +343,7 @@
                                 <option value="Parcial">Parcial</option>
                                 <option value="Recontestar">Recontestar</option>
                                 <option value="Perdido">Perdido</option>
+                                <option value="Isento">Isento</option>
                             </select>
                         </div>
                         <div class="lg:ml-4 flex justify-end">
@@ -487,9 +488,10 @@
                         <option value="Parcial">Parcial</option>
                         <option value="Recontestar">Recontestar</option>
                         <option value="Perdido">Perdido</option>
+                        <option value="Isento">Isento</option>
                     </select>
                 </div>
-                <div class="col-span-1">
+                <div class="col-span-1" id="box-pago-checkbox">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Pagamento Recebido</label>
                     <div class="flex items-center h-12">
                         <input type="checkbox" id="reg-pago" onchange="togglePagoField()" class="w-5 h-5 text-green-600 border-slate-300 rounded focus:ring-green-500 focus:ring-2">
@@ -918,20 +920,30 @@
             const status = document.getElementById('reg-status').value;
             const isParcial = status === 'Parcial';
             const isPerdido = status === 'Perdido';
-            
+            const isIsento = status === 'Isento';
+
             // Handle Parcial case
             document.getElementById('box-valor-parcial').classList.toggle('hidden', !isParcial);
             if(!isParcial) document.getElementById('reg-valor-parcial').value = '';
-            
+
             // Handle Perdido case - show motivo da perda field
             const motivoPerdidaField = document.getElementById('reg-motivo-perdida');
             document.getElementById('box-motivo-perdida').classList.toggle('hidden', !isPerdido);
-            
+
             if (isPerdido) {
                 motivoPerdidaField.setAttribute('required', 'required');
             } else {
                 motivoPerdidaField.removeAttribute('required');
                 motivoPerdidaField.value = '';
+            }
+
+            // Handle Isento case - pagamento não se aplica
+            const pagoCheckbox = document.getElementById('reg-pago');
+            document.getElementById('box-pago-checkbox').classList.toggle('hidden', isIsento);
+            if (isIsento) {
+                pagoCheckbox.checked = false;
+                document.getElementById('reg-valor-pago').value = '';
+                togglePagoField();
             }
         }
 
@@ -1117,7 +1129,7 @@
             });
 
             // Filtra Pagamentos dos itens marcados como pagos
-            let filteredPagos = filtered.filter(g => g.pago && g.valorPago);
+            let filteredPagos = filtered.filter(g => g.pago && g.valorPago && g.status !== 'Isento');
 
             // Lógica de Negócio de KPIs com o Status Parcial
             let total = 0, acatado = 0, contestar = 0, perdido = 0;
@@ -1128,6 +1140,9 @@
                 else if(g.status === 'Parcial') {
                     acatado += g.valorParcial;
                     perdido += (g.valor - g.valorParcial);
+                }
+                else if(g.status === 'Isento') {
+                    // Sem impacto financeiro: conta apenas como volume de glosa (total)
                 }
                 else { // A contestar, Contestado ou Recontestar
                     contestar += g.valor;
@@ -1159,7 +1174,7 @@
         }
 
         function renderCharts(data, pagamentosData, totalAcatadoGeral, totalPagoGeral, conciliationData = data) {
-            const statusConfig = { "A contestar": "#fde047", "Contestado": "#60a5fa", "Acatado": "#22c55e", "Parcial": "#fb923c", "Recontestar": "#fb923c", "Perdido": "#ef4444" };
+            const statusConfig = { "A contestar": "#fde047", "Contestado": "#60a5fa", "Acatado": "#22c55e", "Parcial": "#fb923c", "Recontestar": "#fb923c", "Perdido": "#ef4444", "Isento": "#94a3b8" };
             
             // --- Novos Gráficos: Acatado vs Pago (Conciliação) --- //
             
@@ -1849,7 +1864,8 @@
                 "Acatado": "bg-green-50 text-green-700 border-green-200", 
                 "Parcial": "bg-orange-50 text-orange-700 border-orange-200", 
                 "Recontestar": "bg-orange-50 text-orange-700 border-orange-200",
-                "Perdido": "bg-red-50 text-red-700 border-red-200" 
+                "Perdido": "bg-red-50 text-red-700 border-red-200",
+                "Isento": "bg-slate-100 text-slate-600 border-slate-300"
             };
             return config[s] || "";
         }
