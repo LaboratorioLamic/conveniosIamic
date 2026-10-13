@@ -188,7 +188,10 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
                 <div class="lg:col-span-2 xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-line text-blue-500"></i> Evolução Temporal de Glosas</h3>
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-bold text-navy-900 text-xs uppercase flex items-center gap-2"><i class="fas fa-chart-line text-blue-500"></i> Evolução Temporal de Glosas</h3>
+                        <button type="button" id="metric-btn-chartLine" onclick="toggleChartMetric('chartLine')" class="text-[10px] font-bold uppercase px-3 py-1 rounded-lg border border-slate-200 text-navy-900 hover:bg-slate-50 flex items-center gap-2"><i class="fas fa-exchange-alt text-blue-500"></i> <span>Valor</span></button>
+                    </div>
                     <div class="h-72 relative"><canvas id="chartLine"></canvas></div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -198,7 +201,10 @@
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
                 <div class="lg:col-span-2 xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-balance-scale text-blue-500"></i> Glosado vs Acatado (Convênios)</h3>
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-bold text-navy-900 text-xs uppercase flex items-center gap-2"><i class="fas fa-balance-scale text-blue-500"></i> Glosado vs Acatado (Convênios)</h3>
+                        <button type="button" id="metric-btn-chartCompare" onclick="toggleChartMetric('chartCompare')" class="text-[10px] font-bold uppercase px-3 py-1 rounded-lg border border-slate-200 text-navy-900 hover:bg-slate-50 flex items-center gap-2"><i class="fas fa-exchange-alt text-blue-500"></i> <span>Valor</span></button>
+                    </div>
                     <div class="h-72 relative"><canvas id="chartCompare"></canvas></div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -209,7 +215,10 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
                 <div class="lg:col-span-2 xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-navy-900 text-xs uppercase mb-6 flex items-center gap-2"><i class="fas fa-chart-line text-blue-500"></i> Glosas Perdidas</h3>
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-bold text-navy-900 text-xs uppercase flex items-center gap-2"><i class="fas fa-chart-line text-blue-500"></i> Glosas Perdidas</h3>
+                        <button type="button" id="metric-btn-chartPerdidasLine" onclick="toggleChartMetric('chartPerdidasLine')" class="text-[10px] font-bold uppercase px-3 py-1 rounded-lg border border-slate-200 text-navy-900 hover:bg-slate-50 flex items-center gap-2"><i class="fas fa-exchange-alt text-blue-500"></i> <span>Valor</span></button>
+                    </div>
                     <div class="h-72 relative"><canvas id="chartPerdidasLine"></canvas></div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -677,6 +686,8 @@
         const COLABORADORES_API_URL = "https://script.google.com/macros/s/AKfycbzUd6efhfzkCmYd88_eIIL6dGIQxIINsw-6Y_qM3PRemUbZ06obtF9xKY1S8WRfvXyq9Q/exec";
         let instances = {};
         let colaboradorRanking = [];
+        const chartMetricMode = { chartLine: 'valor', chartCompare: 'valor', chartPerdidasLine: 'valor' };
+        let metricChartsCtx = null;
         let colaboradorRankingPage = 1;
         const colaboradorRankingPageSize = 8;
         let colaboradorSortField = 'quantidade';
@@ -1286,20 +1297,9 @@
             }, { plugins: { legend: { position: 'bottom' } }, cutout: '70%' });
 
             const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-            const lineData = new Array(12).fill(0);
-            data.forEach(g => { const m = new Date(g.data).getUTCMonth(); lineData[m] += g.valor; });
-            refreshChart('chartLine', 'line', {
-                labels: months,
-                datasets: [{ label: 'Valor Glosado', data: lineData, borderColor: '#1e3a8a', tension: 0.4, fill: true, backgroundColor: 'rgba(30, 58, 138, 0.05)', pointBackgroundColor: '#60a5fa' }]
-            });
-
             const lostGlosas = data.filter(g => g.status === 'Perdido');
-            const lostByMonth = new Array(12).fill(0);
-            lostGlosas.forEach(g => { const m = new Date(g.data).getUTCMonth(); lostByMonth[m] += g.valor; });
-            refreshChart('chartPerdidasLine', 'line', {
-                labels: months,
-                datasets: [{ label: 'Glosas Perdidas', data: lostByMonth, borderColor: '#ef4444', tension: 0.4, fill: true, backgroundColor: 'rgba(239, 68, 68, 0.1)', pointBackgroundColor: '#f97316' }]
-            });
+            metricChartsCtx = { data, lostGlosas, months, concilConvs };
+            Object.keys(chartMetricMode).forEach(renderMetricChart);
 
             const lostByConvenioMap = lostGlosas.reduce((acc, curr) => { acc[curr.convenio] = (acc[curr.convenio] || 0) + curr.valor; return acc; }, {});
             const lostConvenios = Object.keys(lostByConvenioMap);
@@ -1328,21 +1328,6 @@
                 .sort((a, b) => b.quantidade - a.quantidade);
             colaboradorRankingPage = 1;
             renderColaboradorRankingTable();
-
-            // chartCompare original: Glosado vs Acatado
-            const glosadoData = concilConvs.map(c => data.filter(g => g.convenio === c).reduce((a, b) => a + b.valor, 0));
-            const acatadoData = concilConvs.map(c => data.filter(g => g.convenio === c).reduce((acc, g) => {
-                if(g.status === 'Acatado') return acc + g.valor;
-                if(g.status === 'Parcial') return acc + g.valorParcial;
-                return acc;
-            }, 0));
-            refreshChart('chartCompare', 'bar', {
-                labels: concilConvs,
-                datasets: [
-                    { label: 'Total Glosado', data: glosadoData, backgroundColor: '#172554', borderRadius: 5 },
-                    { label: 'Total Acatado', data: acatadoData, backgroundColor: '#3b82f6', borderRadius: 5 }
-                ]
-            });
 
             const ticketMap = concilConvs.map(c => {
                 const registros = data.filter(g => g.convenio === c);
@@ -1598,6 +1583,53 @@
             // Atualizar os filtros e renderizar a tabela
             updateTableFilters();
             renderTable();
+        }
+
+        // Gráficos com alternância entre valor (R$) e quantidade de glosas
+        function renderMetricChart(id) {
+            if (!metricChartsCtx) return;
+            const { data, lostGlosas, months, concilConvs } = metricChartsCtx;
+            const isQtd = chartMetricMode[id] === 'quantidade';
+            const options = isQtd ? { scales: { y: { ticks: { precision: 0 } } } } : {};
+            const byMonth = (rows) => {
+                const arr = new Array(12).fill(0);
+                rows.forEach(g => { const m = new Date(g.data).getUTCMonth(); arr[m] += isQtd ? 1 : g.valor; });
+                return arr;
+            };
+
+            const btnLabel = document.querySelector(`#metric-btn-${id} span`);
+            if (btnLabel) btnLabel.innerText = isQtd ? 'Quantidade' : 'Valor';
+
+            if (id === 'chartLine') {
+                refreshChart('chartLine', 'line', {
+                    labels: months,
+                    datasets: [{ label: isQtd ? 'Quantidade de Glosas' : 'Valor Glosado', data: byMonth(data), borderColor: '#1e3a8a', tension: 0.4, fill: true, backgroundColor: 'rgba(30, 58, 138, 0.05)', pointBackgroundColor: '#60a5fa' }]
+                }, options);
+            } else if (id === 'chartPerdidasLine') {
+                refreshChart('chartPerdidasLine', 'line', {
+                    labels: months,
+                    datasets: [{ label: isQtd ? 'Quantidade de Glosas Perdidas' : 'Glosas Perdidas', data: byMonth(lostGlosas), borderColor: '#ef4444', tension: 0.4, fill: true, backgroundColor: 'rgba(239, 68, 68, 0.1)', pointBackgroundColor: '#f97316' }]
+                }, options);
+            } else if (id === 'chartCompare') {
+                const glosadoData = concilConvs.map(c => data.filter(g => g.convenio === c).reduce((a, b) => a + (isQtd ? 1 : b.valor), 0));
+                const acatadoData = concilConvs.map(c => data.filter(g => g.convenio === c).reduce((acc, g) => {
+                    if(g.status === 'Acatado') return acc + (isQtd ? 1 : g.valor);
+                    if(g.status === 'Parcial') return acc + (isQtd ? 1 : g.valorParcial);
+                    return acc;
+                }, 0));
+                refreshChart('chartCompare', 'bar', {
+                    labels: concilConvs,
+                    datasets: [
+                        { label: isQtd ? 'Qtd. Glosada' : 'Total Glosado', data: glosadoData, backgroundColor: '#172554', borderRadius: 5 },
+                        { label: isQtd ? 'Qtd. Acatada' : 'Total Acatado', data: acatadoData, backgroundColor: '#3b82f6', borderRadius: 5 }
+                    ]
+                }, options);
+            }
+        }
+
+        function toggleChartMetric(id) {
+            chartMetricMode[id] = chartMetricMode[id] === 'valor' ? 'quantidade' : 'valor';
+            renderMetricChart(id);
         }
 
         function formatLabelWithPercentage(label, value, total) {
